@@ -1,0 +1,9 @@
+# Tests (activated by Surefire). Postgres, Redis and Mailpit come from TestcontainersConfiguration.
+autocare:
+  dev:
+    admin-email: admin@autocare.tn
+    admin-password: Admin@123456
+  sms:
+    provider: log
+  telegram:
+    bot-token: ""

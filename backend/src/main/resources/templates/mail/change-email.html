@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{mail/layout :: layout(#{mail.change-email.title}, #{mail.change-email.eyebrow}, '✉', ~{::content}, true)}">
+<body>
+<th:block th:fragment="content">
+  <th:block th:replace="~{mail/fragments :: lead(#{mail.change-email.greeting(${name})})}"></th:block>
+  <th:block th:replace="~{mail/fragments :: lead(#{mail.change-email.message(${newEmail})})}"></th:block>
+  <th:block th:replace="~{mail/fragments :: button(${link}, #{mail.change-email.cta})}"></th:block>
+  <th:block th:replace="~{mail/fragments :: fineprint(#{mail.common.validity(${validity})})}"></th:block>
+  <th:block th:replace="~{mail/fragments :: fineprint(#{mail.common.ignore})}"></th:block>
+</th:block>
+</body>
+</html>

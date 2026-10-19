@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AutoCare TN - Class Diagram</title>
+<style>
+:root{--bg:#f5f6f9;--card:#fff;--ink:#1b2130;--mut:#6a7487;--line:#dde1e9;--chip:#edf0f5;--hot:#b4232c;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1218;--card:#181d27;--ink:#e6e9f0;--mut:#98a2b3;--line:#2a3140;--chip:#232a38;--hot:#ff8a8f}}
+:root[data-theme="dark"]{--bg:#0f1218;--card:#181d27;--ink:#e6e9f0;--mut:#98a2b3;--line:#2a3140;--chip:#232a38;--hot:#ff8a8f}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1280px;margin:0 auto;padding:16px}
+h1{margin:0 0 4px;font-size:22px}h2{margin:28px 0 10px;font-size:17px}
+.sub{color:var(--mut);margin:0 0 6px}
+.g{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}
+.rg{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px}
+.card h3{margin:0 0 2px;font-size:14px}.card small{color:var(--mut)}
+.role{margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}
+.role b{font-size:13px}
+.ph{font-size:10px;padding:1px 6px;border-radius:9px;background:var(--chip);color:var(--mut);margin-left:6px;font-weight:600}
+.p{display:inline-block;margin:3px 4px 0 0;padding:1px 7px;border-radius:9px;background:var(--chip);font:11px ui-monospace,Menlo,monospace}
+.p.w{background:var(--hot);color:var(--card);font-weight:700}
+pre{margin:6px 0 0;padding:10px;background:var(--chip);border-radius:8px;overflow-x:auto;font:12px/1.5 ui-monospace,Menlo,monospace}
+ol{margin:6px 0 0;padding-left:18px}li{margin:3px 0}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:12px}
+td,th{text-align:left;padding:4px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.mod{margin-top:16px;border-radius:12px;padding:10px;border:1px solid var(--line);background:color-mix(in srgb,var(--c) 6%,var(--bg))}
+.mh{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:15px}
+.mh i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.mh span{font-size:11px;color:var(--mut)}
+.box{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--c);border-radius:8px;overflow:hidden}
+.box h4{margin:0;padding:6px 10px;font-size:13px;background:color-mix(in srgb,var(--c) 14%,var(--card))}
+.f{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:2px 10px;font:12px ui-monospace,Menlo,monospace}
+.f u{text-decoration:none;color:var(--mut)}
+.f:last-child{padding-bottom:6px}
+.r{font:600 10px system-ui,sans-serif;padding:0 6px;border-radius:9px;border:1px solid var(--rc);color:var(--rc)}
+.r.x{background:var(--rc);color:#fff}
+.box.e{border-style:dashed}.box.e .f{display:block;color:var(--mut)}
+</style></head><body><main>
+<h1>AutoCare TN - Class Diagram</h1>
+<p class="sub">Modular monolith, one PostgreSQL schema per module. Modules talk only through facades and IDs.</p>
+<p class="sub"><span class="r" style="--rc:#64748b">&rarr; Class</span> = ID that points to a class in the same module &nbsp; <span class="r x" style="--rc:#64748b">&rarr; Class</span> = ID that points to another module (no JPA relation)</p>
+
+<h2>Roles and permissions</h2>
+<div class="g rg" id="roles"></div>
+<div class="g rg" style="margin-top:12px">
+<div class="card"><h3>OrganizationMember (embedded permissions)</h3><small>No Role table. Templates live in code as MemberRoleKey.</small>
+<pre>{
+  "organizationId": 12,
+  "userId": 45,
+  "status": "ACTIVE",
+  "roleKey": "PROVIDER_TECHNICIAN",
+  "permissions": [
+    "request:read",
+    "request:update_status",
+    "history:read"
+  ]
+}</pre></div>
+<div class="card"><h3>How authorization works</h3><ol>
+<li>Platform endpoints (admin, own vehicles, diagnostics) check the roles and permissions in the JWT (loaded from <code>Role</code> through <code>UserRole</code> at login, so no join per request).</li>
+<li>Organization endpoints load the member by (organizationId, userId), cached in Redis as <code>perms:{orgId}:{userId}</code>.</li>
+<li><code>r:a</code> is granted by <code>r:a</code>, <code>r:*</code>, <code>*:a</code> or <code>*:*</code>.</li>
+<li>Adding a member copies the template permissions. Editing them sets <code>roleKey = CUSTOM</code>.</li>
+<li>Each organization keeps at least one member with <code>member:manage</code> or <code>*:*</code>.</li></ol></div>
+<div class="card"><h3>Permission catalog</h3><div class="tw"><table id="cat"></table></div></div>
+</div>
+
+<h2>Classes by module</h2>
+<div id="mods"></div>
+</main>
+<script>
+const M=[
+['auth','V1','#3b82f6',[
+['User','id:Long;email:String;passwordHash:String;fullName:String;phone:String;active:boolean;createdAt:DateTime'],
+['RefreshToken','id:Long;userId:Long;tokenHash:String;expiresAt:DateTime;revokedAt:DateTime'],
+['AuthToken','id:Long;userId:Long;type:AuthTokenType;tokenHash:String;expiresAt:DateTime;usedAt:DateTime'],
+['AuthTokenType','EMAIL_VERIFICATION;PASSWORD_RESET','e'],
+['Role','id:Long;name:String;description:String;permissions:Json'],
+['UserRole','id:Long;userId:Long;roleId:Long']]],
+['organization','V1','#8b5cf6',[
+['Organization','id:Long;name:String;type:OrganizationType;status:OrganizationStatus;ownerId:Long;description:String;phone:String;governorate:String;city:String;address:String;serviceZone:String;workingHours:Json;createdAt:DateTime'],
+['OrganizationMember','id:Long;organizationId:Long;userId:Long;status:MemberStatus;roleKey:MemberRoleKey;permissions:Json;joinedAt:DateTime'],
+['OrganizationInvitation','id:Long;organizationId:Long;email:String;roleKey:MemberRoleKey;tokenHash:String;status:InvitationStatus;invitedBy:Long;expiresAt:DateTime;createdAt:DateTime'],
+['InvitationStatus','PENDING;ACCEPTED;EXPIRED;REVOKED','e'],
+['OrganizationType','PROVIDER (offers services);SELLER (sells on marketplace)','e'],
+['OrganizationStatus','PENDING;APPROVED;SUSPENDED','e'],
+['MemberStatus','INVITED;ACTIVE;SUSPENDED','e'],
+['MemberRoleKey','PROVIDER_OWNER;PROVIDER_MANAGER;PROVIDER_RECEPTIONIST;PROVIDER_TECHNICIAN;SELLER_OWNER;SELLER_MANAGER;SELLER_STAFF;CUSTOM','e']]],
+['file','V1','#64748b',[
+['File','id:Long;storageKey:String;originalName:String;contentType:String;sizeBytes:long;ownerType:FileOwnerType;ownerId:Long;purpose:FilePurpose;position:int;uploadedBy:Long;createdAt:DateTime'],
+['FileOwnerType','USER;ORGANIZATION;VEHICLE;SERVICE_REQUEST;LISTING','e'],
+['FilePurpose','AVATAR;LOGO;PHOTO;DOCUMENT','e']]],
+['vehicle','V1','#0ea5e9',[
+['Vehicle','id:Long;ownerId:Long;brand:String;model:String;year:int;fuelType:String;engine:String;mileage:int;createdAt:DateTime']]],
+['catalog','V1','#14b8a6',[
+['AutoService','id:Long;name:String;description:String;active:boolean']]],
+['provider','V1','#10b981',[
+['ProviderService','id:Long;organizationId:Long;serviceId:Long;atHome:boolean;indicativePrice:BigDecimal']]],
+['diagnostic','V1','#f59e0b',[
+['Symptom','id:Long;label:String'],
+['Question','id:Long;symptomId:Long;text:String;answerType:AnswerType;options:Json;position:int'],
+['AnswerType','YES_NO;SINGLE_CHOICE;MULTIPLE_CHOICE;NUMBER','e'],
+['DiagnosticRule','id:Long;symptomId:Long;conditions:Json;priority:int;possibleCause:String;recommendation:String;serviceId:Long'],
+['Diagnostic','id:Long;userId:Long;vehicleId:Long;symptomId:Long;ruleId:Long;answers:Json;createdAt:DateTime']]],
+['servicerequest','V1','#ef4444',[
+['ServiceRequest','id:Long;userId:Long;vehicleId:Long;serviceId:Long;organizationId:Long;desiredDate:Date;locationType:LocationType;location:String;note:String;rejectionReason:String;status:RequestStatus;createdAt:DateTime'],
+['RequestStatus','PENDING;CONFIRMED;IN_PROGRESS;COMPLETED;REJECTED;CANCELLED','e'],
+['ServiceRequestStatusHistory','id:Long;serviceRequestId:Long;fromStatus:RequestStatus;toStatus:RequestStatus;changedBy:Long;createdAt:DateTime'],
+['LocationType','HOME;AT_PROVIDER','e']]],
+['maintenance','V1','#f97316',[
+['MaintenanceRecord','id:Long;vehicleId:Long;serviceId:Long;organizationId:Long;serviceRequestId:Long;date:Date;mileage:int;description:String;result:String;recommendations:String']]],
+['notification','V1','#ec4899',[
+['Notification','id:Long;senderId:Long;organizationId:Long;type:String;title:String;body:String;resourceType:String;resourceId:Long;createdAt:DateTime'],
+['NotificationRecipient','id:Long;notificationId:Long;userId:Long;readAt:DateTime;dismissedAt:DateTime']]],
+['marketplace','V2','#84cc16',[
+['Listing','id:Long;userId:Long;organizationId:Long;categoryId:Long;title:String;description:String;price:BigDecimal;itemCondition:ItemCondition;governorate:String;city:String;compatBrand:String;compatModel:String;compatYearMin:int;compatYearMax:int;status:ListingStatus;createdAt:DateTime'],
+['ListingCategory','id:Long;name:String;parentId:Long'],
+['Favorite','id:Long;userId:Long;listingId:Long'],
+['Conversation','id:Long;listingId:Long;buyerId:Long;sellerId:Long'],
+['Message','id:Long;conversationId:Long;senderId:Long;content:String;sentAt:DateTime'],
+['ListingReport','id:Long;listingId:Long;reporterId:Long;reason:String;handled:boolean;createdAt:DateTime'],
+['ItemCondition','NEW;USED','e'],['ListingStatus','ACTIVE;SOLD;SUSPENDED','e']]],
+['subscription','V2','#a855f7',[
+['Plan','id:Long;name:String;audience:PlanAudience;amount:BigDecimal;currency:String;interval:String;features:Json;active:boolean'],
+['PlanAudience','USER;PROVIDER;SELLER','e'],
+['Subscription','id:Long;subscriberType:SubscriberType;subscriberId:Long;planId:Long;status:SubscriptionStatus;currentPeriodStart:DateTime;currentPeriodEnd:DateTime;canceledAt:DateTime'],
+['SubscriberType','USER;ORGANIZATION','e'],
+['SubscriptionStatus','TRIALING;ACTIVE;PAST_DUE;CANCELED;EXPIRED','e']]],
+['billing','V2','#6366f1',[
+['Invoice','id:Long;payerType:PayerType;payerId:Long;subscriptionId:Long;number:String;status:String;currency:String;total:BigDecimal;items:Json;dueDate:Date;paidAt:DateTime'],
+['Payment','id:Long;invoiceId:Long;status:String;amount:BigDecimal;currency:String;provider:String;providerPaymentId:String;failureReason:String;paidAt:DateTime'],
+['PayerType','USER;ORGANIZATION','e']]],
+['review','V2','#eab308',[
+['Review','id:Long;serviceRequestId:Long;organizationId:Long;userId:Long;rating:int;comment:String;createdAt:DateTime']]],
+['audit','V2','#78716c',[
+['AuditLog','id:Long;actorId:Long;action:String;targetType:String;targetId:Long;details:Json;createdAt:DateTime']]]
+];
+const RM={userId:'User',organizationId:'Organization',vehicleId:'Vehicle',serviceId:'AutoService',serviceRequestId:'ServiceRequest',categoryId:'ListingCategory',listingId:'Listing',planId:'Plan',subscriptionId:'Subscription',invoiceId:'Invoice',ruleId:'DiagnosticRule',symptomId:'Symptom',roleId:'Role',notificationId:'Notification',conversationId:'Conversation',invitedBy:'User',changedBy:'User',reporterId:'User',actorId:'User',buyerId:'User',sellerId:'User',senderId:'User',uploadedBy:'User',ownerId:'User',parentId:'ListingCategory'};
+const cm={};M.forEach(m=>m[3].forEach(c=>cm[c[0]]=m));
+function ref(c,f){if((c==='File'&&f==='ownerId')||(c==='Notification'&&f==='resourceId')||f==='subscriberId'||f==='payerId')return'*';return RM[f]}
+let h='';
+M.forEach(m=>{h+=`<section class="mod" style="--c:${m[2]}"><h3 class="mh"><i></i>${m[0]} <span>schema ${m[0]} &middot; ${m[1]}</span></h3><div class="g">`;
+m[3].forEach(c=>{const [n,fs,e]=c;h+=`<div class="box${e?' e':''}"><h4>${e?'&laquo;enum&raquo; ':''}${n}</h4>`;
+fs.split(';').forEach(f=>{if(e){h+=`<div class="f">${f}</div>`;return}
+const [a,t]=f.split(':');const r=ref(n,a);let chip='';
+if(r==='*')chip=`<span class="r x" style="--rc:#64748b">&rarr; any</span>`;
+else if(r&&r!==n){const tm=cm[r];chip=`<span class="r${tm[0]!==m[0]?' x':''}" style="--rc:${tm[2]}">&rarr; ${r}</span>`}
+h+=`<div class="f"><span>${a} <u>${t}</u></span>${chip}</div>`});h+='</div>'});h+='</div></section>'});
+document.getElementById('mods').innerHTML=h;
+const R=[
+['Platform roles','Role table mapped to users by UserRole, loaded into the JWT at login',[
+['USER','V1','vehicle:*,diagnostic:use,request:create,request:read,request:cancel,review:create,subscription:manage,history:read,notification:read,organization:create'],
+['ADMIN','V1','*:*'],['MODERATOR','V2','listing:moderate,user:read']]],
+['Provider organization roles','roleKey on OrganizationMember, PROVIDER organizations only',[
+['PROVIDER_OWNER','V1','*:*'],
+['PROVIDER_MANAGER','V1','organization:read,organization:update,service:*,request:*,member:read,history:read,invoice:read'],
+['PROVIDER_RECEPTIONIST','V1','organization:read,service:read,request:read,request:accept,request:reject'],
+['PROVIDER_TECHNICIAN','V1','request:read,request:update_status,history:read']]],
+['Seller organization roles','roleKey on OrganizationMember, SELLER organizations only',[
+['SELLER_OWNER','V2','*:*'],
+['SELLER_MANAGER','V2','organization:read,organization:update,listing:*,conversation:*,member:read,invoice:read'],
+['SELLER_STAFF','V2','listing:read,listing:create,listing:update,conversation:*']]]];
+document.getElementById('roles').innerHTML=R.map(g=>`<div class="card"><h3>${g[0]}</h3><small>${g[1]}</small>`+g[2].map(r=>`<div class="role"><b>${r[0]}</b><span class="ph">${r[1]}</span><div>${r[2].split(',').map(p=>`<span class="p${p==='*:*'?' w':''}">${p}</span>`).join('')}</div></div>`).join('')+'</div>').join('');
+const C=[['user','read, manage','auth'],['organization','create, read, update, approve','organization'],['member','read, manage','organization'],['service','read, manage','provider'],['vehicle','read, create, update, delete','vehicle'],['diagnostic','use, manage','diagnostic'],['request','create, read, accept, reject, update_status, cancel','servicerequest'],['history','read','maintenance'],['notification','read','notification'],['listing','read, create, update, delete, moderate','marketplace'],['conversation','read, send','marketplace'],['review','create, read','review'],['audit','read','audit'],['invoice','read','billing'],['subscription','read, manage','subscription']];
+document.getElementById('cat').innerHTML='<tr><th>Resource</th><th>Actions</th><th>Module</th></tr>'+C.map(r=>`<tr><td><code>${r[0]}</code></td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('');
+</script></body></html>

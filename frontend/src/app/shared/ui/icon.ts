@@ -1,0 +1,211 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  Renderer2,
+  effect,
+  inject,
+  input,
+} from '@angular/core';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CircleCheck,
+  Eye,
+  EyeOff,
+  LockKeyhole,
+  Mail,
+  Send,
+  Smartphone,
+  ArrowUpDown,
+  BatteryCharging,
+  Bell,
+  Briefcase,
+  Building2,
+  Car,
+  ChevronDown,
+  ChevronRight,
+  Info,
+  Ellipsis,
+  CircleDot,
+  ClipboardList,
+  Clock,
+  Disc,
+  Droplet,
+  ExternalLink,
+  FileText,
+  Headset,
+  History,
+  House,
+  KeyRound,
+  LayoutDashboard,
+  LifeBuoy,
+  List,
+  LocateFixed,
+  LogOut,
+  Map,
+  MapPin,
+  Menu,
+  Moon,
+  Navigation,
+  Phone,
+  Route,
+  Search,
+  Settings,
+  ShieldCheck,
+  Snowflake,
+  Star,
+  Stethoscope,
+  Sun,
+  Thermometer,
+  User,
+  Users,
+  Wrench,
+  X,
+  Zap,
+  SlidersHorizontal,
+  RotateCcw,
+  Upload,
+  Download,
+  ImagePlus,
+  Trash2,
+  CalendarDays,
+  ChevronLeft,
+  Gauge,
+  Fuel,
+  Paintbrush,
+  Sparkles,
+  Lightbulb,
+  Wind,
+  Truck,
+  Hammer,
+  Fan,
+  Cog,
+  SprayCan,
+  Key,
+} from 'lucide';
+
+/** Lucide icons (same set as toutestcasa), imported one by one so unused ones are tree-shaken. */
+const ICONS = {
+  home: House,
+  map: Map,
+  'map-pin': MapPin,
+  search: Search,
+  diagnostic: Stethoscope,
+  car: Car,
+  requests: ClipboardList,
+  support: LifeBuoy,
+  building: Building2,
+  bell: Bell,
+  menu: Menu,
+  x: X,
+  'log-out': LogOut,
+  'chevron-down': ChevronDown,
+  'chevron-right': ChevronRight,
+  info: Info,
+  more: Ellipsis,
+  dashboard: LayoutDashboard,
+  wrench: Wrench,
+  users: Users,
+  file: FileText,
+  key: KeyRound,
+  headset: Headset,
+  locate: LocateFixed,
+  navigation: Navigation,
+  phone: Phone,
+  clock: Clock,
+  'arrow-left': ArrowLeft,
+  user: User,
+  droplet: Droplet,
+  disc: Disc,
+  tire: CircleDot,
+  battery: BatteryCharging,
+  snowflake: Snowflake,
+  thermometer: Thermometer,
+  zap: Zap,
+  suspension: ArrowUpDown,
+  shield: ShieldCheck,
+  history: History,
+  settings: Settings,
+  sun: Sun,
+  moon: Moon,
+  external: ExternalLink,
+  star: Star,
+  route: Route,
+  list: List,
+  briefcase: Briefcase,
+  eye: Eye,
+  'eye-off': EyeOff,
+  check: Check,
+  'circle-check': CircleCheck,
+  mail: Mail,
+  smartphone: Smartphone,
+  send: Send,
+  'arrow-right': ArrowRight,
+  lock: LockKeyhole,
+  sliders: SlidersHorizontal,
+  reset: RotateCcw,
+  upload: Upload,
+  download: Download,
+  'image-plus': ImagePlus,
+  trash: Trash2,
+  sort: ArrowUpDown,
+  calendar: CalendarDays,
+  'chevron-left': ChevronLeft,
+  gauge: Gauge,
+  fuel: Fuel,
+  paintbrush: Paintbrush,
+  sparkles: Sparkles,
+  lightbulb: Lightbulb,
+  wind: Wind,
+  truck: Truck,
+  hammer: Hammer,
+  fan: Fan,
+  cog: Cog,
+  'spray-can': SprayCan,
+  'car-key': Key,
+};
+
+export type IconName = keyof typeof ICONS;
+
+type IconChild = [string, Record<string, string | number>];
+
+/**
+ * `<svg appIcon name="car" class="size-5"></svg>`. Decorative by default (aria-hidden);
+ * give the parent button an aria-label.
+ */
+@Component({
+  // eslint-disable-next-line @angular-eslint/component-selector
+  selector: 'svg[appIcon]',
+  template: '',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { 'aria-hidden': 'true', class: 'shrink-0' },
+})
+export class Icon {
+  readonly name = input.required<IconName>();
+
+  constructor() {
+    const svg = inject(ElementRef<SVGElement>).nativeElement as SVGElement;
+    const renderer = inject(Renderer2);
+    const base: Record<string, string> = {
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+    };
+    for (const [key, value] of Object.entries(base)) renderer.setAttribute(svg, key, value);
+    effect(() => {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+      const children = (ICONS[this.name()] as unknown as [string, unknown, IconChild[]])[2];
+      for (const [tag, attrs] of children) {
+        const child = renderer.createElement(tag, 'svg');
+        for (const [key, value] of Object.entries(attrs))
+          renderer.setAttribute(child, key, String(value));
+        renderer.appendChild(svg, child);
+      }
+    });
+  }
+}

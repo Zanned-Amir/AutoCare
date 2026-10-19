@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Support">
+<path d="M62 162c-6-58 40-112 112-120 52-6 86 14 128 10 46-4 76 30 78 76 2 52-30 84-70 104-48 24-100 30-156 18-56-12-86-36-92-88Z" fill="#ebf7f8"/>
+<path d="M92 96c0-14 11-24 24-24h128c14 0 24 10 24 24v62c0 14-10 24-24 24h-84l-38 30v-30h-6c-13 0-24-10-24-24Z" fill="#0b6e79"/>
+<circle cx="140" cy="127" r="8" fill="#ffffff"/><circle cx="180" cy="127" r="8" fill="#ffffff"/><circle cx="220" cy="127" r="8" fill="#ffffff"/>
+<path d="M200 168c0-12 10-22 22-22h78c12 0 22 10 22 22v40c0 12-10 22-22 22h-8v26l-30-26h-40c-12 0-22-10-22-22Z" fill="#ffb020"/>
+<path d="M226 186h70M226 206h46" stroke="#141a1e" stroke-width="7" stroke-linecap="round"/>
+</svg>

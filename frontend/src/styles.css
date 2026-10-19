@@ -1,0 +1,431 @@
+@import 'tailwindcss';
+
+/* Headings in Instrument Sans (same type pairing as toutestcasa), body in Inter Variable. */
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('./assets/fonts/instrument-sans/InstrumentSans-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('./assets/fonts/instrument-sans/InstrumentSans-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('./assets/fonts/instrument-sans/InstrumentSans-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* Dark mode follows a `.dark` class on <html> (set by UiStore), defaulting to the OS setting. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * AutoCare design tokens. Read DESIGN-TOKENS.md before adding or changing anything here.
+ * Palette "Petrol & Signal": petrol teal for trust, signal amber for actions, graphite neutrals.
+ */
+@theme {
+  /* ---------- Fonts ---------- */
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+
+  /* ---------- Raw palettes ---------- */
+  --color-petrol-50: #ebf7f8;
+  --color-petrol-100: #cdebee;
+  --color-petrol-200: #9dd6dc;
+  --color-petrol-300: #63bbc4;
+  --color-petrol-400: #2e9ca8;
+  --color-petrol-500: #12838f;
+  --color-petrol-600: #0b6e79;
+  --color-petrol-700: #0a5862;
+  --color-petrol-800: #0b4850;
+  --color-petrol-900: #0c3a41;
+
+  --color-signal-50: #fff8e6;
+  --color-signal-100: #ffedbf;
+  --color-signal-200: #ffdd85;
+  --color-signal-300: #ffcb4d;
+  --color-signal-400: #ffbc2e;
+  --color-signal-500: #ffb020;
+  --color-signal-600: #e09200;
+  --color-signal-700: #b37300;
+  --color-signal-800: #8a5a00;
+  --color-signal-900: #6b4600;
+
+  --color-graphite-50: #f6f8f9;
+  --color-graphite-100: #eceff1;
+  --color-graphite-200: #dde2e5;
+  --color-graphite-300: #c4ccd1;
+  --color-graphite-400: #8a959c;
+  --color-graphite-500: #5f6b73;
+  --color-graphite-600: #4f5a61;
+  --color-graphite-700: #3a444a;
+  --color-graphite-800: #252d32;
+  --color-graphite-900: #141a1e;
+  --color-graphite-950: #0f1518;
+
+  /* ---------- Semantic colors (light) ---------- */
+  --color-background: #ffffff;
+  --color-background-subtle: var(--color-graphite-50);
+  --color-surface: #ffffff;
+  --color-surface-muted: var(--color-graphite-100);
+  --color-background-inverse: var(--color-graphite-900);
+
+  --color-foreground: var(--color-graphite-900);
+  --color-foreground-secondary: var(--color-graphite-600);
+  --color-foreground-muted: var(--color-graphite-500);
+  --color-foreground-inverse: #ffffff;
+
+  --color-primary: var(--color-petrol-600);
+  --color-primary-hover: var(--color-petrol-700);
+  --color-primary-foreground: #ffffff;
+  --color-primary-subtle: var(--color-petrol-50);
+
+  --color-accent: var(--color-signal-500);
+  --color-accent-hover: var(--color-signal-600);
+  --color-accent-foreground: var(--color-graphite-900);
+  --color-accent-text: var(--color-signal-800);
+
+  --color-border: var(--color-graphite-300);
+  --color-border-strong: var(--color-graphite-400);
+  --color-border-subtle: var(--color-graphite-200);
+  --color-ring: var(--color-petrol-500);
+
+  --color-success: #15803d;
+  --color-success-subtle: #e8f5ec;
+  --color-error: #c62828;
+  --color-error-subtle: #fdecec;
+  --color-warning: #c2410c;
+  --color-warning-subtle: #fff1e8;
+  --color-info: #1d4ed8;
+  --color-info-subtle: #eaf0fd;
+
+  /* ---------- Radius & shadow ---------- */
+  /* Soft, rounded surfaces: 24px cards, 12px tiles, pill controls. */
+  --radius-control: 0.75rem;
+  --radius-card: 1.5rem;
+  --shadow-card: 0 1px 2px rgb(11 72 80 / 0.05), 0 4px 10px -2px rgb(11 72 80 / 0.07);
+  --shadow-raised: 0 1px 2px rgb(11 72 80 / 0.04), 0 12px 32px -8px rgb(11 72 80 / 0.14);
+}
+
+/* ---------- Semantic colors (dark) ---------- */
+.dark {
+  --color-background: var(--color-graphite-950);
+  --color-background-subtle: #131a1e;
+  --color-surface: #182025;
+  --color-surface-muted: #1f282e;
+  --color-background-inverse: #0b1013;
+
+  --color-foreground: #e8edf0;
+  --color-foreground-secondary: #b9c3c9;
+  --color-foreground-muted: #93a0a8;
+
+  --color-primary: var(--color-petrol-400);
+  --color-primary-hover: var(--color-petrol-300);
+  --color-primary-foreground: var(--color-graphite-950);
+  --color-primary-subtle: #10303a;
+
+  --color-accent-text: var(--color-signal-400);
+
+  --color-border: #34404a;
+  --color-border-strong: #4a5862;
+  --color-border-subtle: #252f36;
+
+  --color-success-subtle: #12301d;
+  --color-error-subtle: #3a1616;
+  --color-warning-subtle: #3a2210;
+  --color-info-subtle: #15244a;
+  --color-success: #4ade80;
+  --color-error: #f87171;
+  --color-warning: #fb923c;
+  --color-info: #93b4ff;
+}
+
+/* ---------- Typography scale: each class sets font, size, line height and weight ---------- */
+@utility text-display {
+  font-family: var(--font-heading);
+  font-size: clamp(2.5rem, 5.5vw, 4rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+@utility text-h1 {
+  font-family: var(--font-heading);
+  font-size: clamp(2.25rem, 4vw, 3rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+@utility text-h2 {
+  font-family: var(--font-heading);
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+}
+@utility text-h3 {
+  font-family: var(--font-heading);
+  font-size: 1.75rem;
+  line-height: 1.25;
+  font-weight: 600;
+}
+@utility text-h4 {
+  font-family: var(--font-heading);
+  font-size: 1.375rem;
+  line-height: 1.3;
+  font-weight: 600;
+}
+@utility text-stat {
+  font-family: var(--font-heading);
+  font-size: 1.75rem;
+  line-height: 1.1;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+@utility text-price {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  line-height: 1.3;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+@utility text-body-lg {
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  line-height: 1.6;
+  font-weight: 400;
+}
+@utility text-body {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.55;
+  font-weight: 400;
+}
+@utility text-body-sm {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-weight: 400;
+}
+@utility text-button {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  font-weight: 600;
+}
+@utility text-label {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  font-weight: 600;
+}
+@utility text-overline {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+@utility text-caption {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  font-weight: 400;
+}
+/* Licence plates, VINs and mileage */
+@utility text-plate {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 0.875rem;
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+}
+
+/* ---------- Map pins (Leaflet builds this DOM outside Angular templates) ---------- */
+.ac-pin-host {
+  background: none;
+  border: 0;
+}
+.ac-pin {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 6px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  white-space: nowrap;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  border: 1.5px solid var(--color-primary);
+  box-shadow: 0 6px 16px -6px rgb(15 21 24 / 0.45);
+  font: 600 12px/1.15 var(--font-sans);
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease;
+}
+.ac-pin::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  transform: translateX(-50%) rotate(45deg);
+  background: inherit;
+  border-right: inherit;
+  border-bottom: inherit;
+}
+.ac-pin small {
+  font-weight: 500;
+  font-size: 10.5px;
+  color: var(--color-foreground-secondary);
+}
+.ac-pin--active {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  transform: translate(-50%, calc(-100% - 6px)) scale(1.08);
+}
+.ac-pin--active small {
+  color: var(--color-primary-foreground);
+}
+.ac-pin--approx {
+  border-style: dashed;
+  opacity: 0.85;
+}
+.ac-me {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: #2f80ed;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 0 rgb(47 128 237 / 0.5);
+  animation: ac-pulse 2s infinite;
+}
+.ac-drop {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  transform: translate(-50%, -100%) rotate(-45deg);
+  border-radius: 50% 50% 50% 0;
+  background: var(--color-accent);
+  border: 3px solid var(--color-primary);
+  cursor: grab;
+}
+@keyframes ac-pulse {
+  0% { box-shadow: 0 0 0 0 rgb(47 128 237 / 0.5); }
+  70% { box-shadow: 0 0 0 14px rgb(47 128 237 / 0); }
+  100% { box-shadow: 0 0 0 0 rgb(47 128 237 / 0); }
+}
+/* Overlays (toutestcasa Modal / Drawer): fade the backdrop, the panel rises (phone sheet), pops (dialog) or slides (drawer). */
+@keyframes ac-fade-in {
+  from { opacity: 0; }
+}
+@keyframes ac-rise-in {
+  from { transform: translateY(100%); }
+}
+@keyframes ac-pop-in {
+  from { opacity: 0; transform: scale(0.95); }
+}
+@keyframes ac-slide-in-right {
+  from { transform: translateX(100%); }
+}
+.ac-overlay-in {
+  animation: ac-fade-in 150ms ease-out;
+}
+.ac-dialog-in {
+  animation: ac-rise-in 200ms ease-out;
+}
+@media (min-width: 48rem) {
+  .ac-dialog-in {
+    animation: ac-pop-in 150ms ease-out;
+  }
+}
+.ac-drawer-in {
+  animation: ac-slide-in-right 200ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ac-overlay-in,
+  .ac-dialog-in,
+  .ac-drawer-in {
+    animation: none;
+  }
+}
+.leaflet-container {
+  font-family: var(--font-sans);
+  background: var(--color-surface-muted);
+}
+
+/* Calmer OpenStreetMap tiles (the pins carry the colour); inverted in dark mode. */
+app-map .leaflet-tile-pane {
+  filter: saturate(0.7) contrast(1.04);
+}
+app-map.ac-map--dark .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) saturate(0.35) brightness(0.9) contrast(0.95);
+}
+
+/*
+ * Form fields (toutestcasa pattern): 52px pill on the subtle background, accent border on focus.
+ * In the components layer so a utility on the element (h-9, w-24, rounded-…) still wins.
+ */
+@layer components {
+  .ac-field {
+    height: 52px;
+    width: 100%;
+    border-radius: 9999px;
+    border: 1.5px solid transparent;
+    background: var(--color-background-subtle);
+    padding: 0 1rem;
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.2;
+    color: var(--color-foreground);
+    outline: none;
+    transition: border-color 120ms ease, background-color 120ms ease;
+  }
+  .ac-field::placeholder {
+    color: var(--color-foreground-secondary);
+  }
+  .ac-field:focus {
+    border-color: var(--color-accent);
+    background: var(--color-surface);
+  }
+  .ac-field[aria-invalid='true'] {
+    border-color: var(--color-error);
+  }
+  .ac-field:disabled {
+    cursor: not-allowed;
+    color: var(--color-foreground-muted);
+  }
+  textarea.ac-field {
+    height: auto;
+    min-height: 6rem;
+    border-radius: 1.25rem;
+    padding: 0.75rem 1rem;
+  }
+  select.ac-field {
+    padding-right: 2.25rem;
+  }
+}

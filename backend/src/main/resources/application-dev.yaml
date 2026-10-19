@@ -1,0 +1,9 @@
+# Local development (the default profile).
+autocare:
+  dev:
+    admin-email: ${DEV_ADMIN_EMAIL:admin@autocare.tn}
+    admin-password: ${DEV_ADMIN_PASSWORD:Admin@123456}
+
+logging:
+  level:
+    tn.autocare: debug

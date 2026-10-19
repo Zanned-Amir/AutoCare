@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Diagnostic">
+<path d="M62 162c-6-58 40-112 112-120 52-6 86 14 128 10 46-4 76 30 78 76 2 52-30 84-70 104-48 24-100 30-156 18-56-12-86-36-92-88Z" fill="#ebf7f8"/>
+<rect x="24" y="246" width="352" height="10" rx="5" fill="#dde2e5"/>
+<path d="M60 251h40M140 251h40M220 251h40M300 251h40" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+<g transform="translate(0 18) scale(0.9)">
+  <path d="M60 200c0-15 10-22 25-24l35-4 30-32c6-7 15-10 25-10h70c11 0 20 4 27 12l26 30 27 4c13 2 21 10 21 22v14c0 5-4 8-9 8H69c-5 0-9-4-9-9Z" fill="#0b6e79"/>
+  <path d="M158 168l20-23c3-3 7-5 12-5h25v28Z" fill="#cdebee"/>
+  <path d="M225 140h20c5 0 10 2 13 6l22 22h-55Z" fill="#cdebee"/>
+  <path d="M220 142v72" stroke="#ffffff" stroke-opacity=".22" stroke-width="2"/>
+  <rect x="236" y="182" width="16" height="4" rx="2" fill="#ffffff" fill-opacity=".5"/>
+  <rect x="330" y="186" width="14" height="8" rx="3" fill="#ffb020"/>
+  <rect x="60" y="188" width="9" height="8" rx="3" fill="#e5484d"/>
+  <circle cx="115" cy="220" r="24" fill="#141a1e"/><circle cx="115" cy="220" r="10" fill="#c4ccd1"/>
+  <circle cx="290" cy="220" r="24" fill="#141a1e"/><circle cx="290" cy="220" r="10" fill="#c4ccd1"/>
+</g>
+<circle cx="292" cy="86" r="46" fill="#ffb020"/>
+<path d="M292 62v32" stroke="#141a1e" stroke-width="9" stroke-linecap="round"/>
+<circle cx="292" cy="110" r="6" fill="#141a1e"/>
+<path d="M120 70c0 30 22 46 46 46s46-16 46-46" stroke="#141a1e" stroke-width="6" fill="none" stroke-linecap="round"/>
+<path d="M166 116v24" stroke="#141a1e" stroke-width="6" stroke-linecap="round"/>
+<circle cx="166" cy="148" r="11" fill="#0b6e79" stroke="#141a1e" stroke-width="5"/>
+<circle cx="120" cy="66" r="6" fill="#141a1e"/><circle cx="212" cy="66" r="6" fill="#141a1e"/>
+</svg>

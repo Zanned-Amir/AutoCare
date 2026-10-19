@@ -1,0 +1,16 @@
+package tn.autocare.audit.repository;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import tn.autocare.audit.api.AuditTargetType;
+import tn.autocare.audit.entity.AuditLog;
+
+public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
+
+	Page<AuditLog> findAllByTargetType(AuditTargetType targetType, Pageable pageable);
+
+	Page<AuditLog> findAllByTargetTypeAndTargetId(AuditTargetType targetType, Long targetId, Pageable pageable);
+
+}

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{mail/layout :: layout(#{mail.account-invitation.title}, #{mail.account-invitation.eyebrow}, '👋', ~{::content}, false)}">
+<body>
+<th:block th:fragment="content">
+  <th:block th:replace="~{mail/fragments :: lead(#{mail.account-invitation.greeting(${name})})}"></th:block>
+  <th:block th:replace="~{mail/fragments :: lead(#{mail.account-invitation.message})}"></th:block>
+  <th:block th:replace="~{mail/fragments :: button(${link}, #{mail.account-invitation.cta})}"></th:block>
+  <th:block th:replace="~{mail/fragments :: fineprint(#{mail.common.validity(${validity})})}"></th:block>
+  <th:block th:replace="~{mail/fragments :: fineprint(#{mail.account-invitation.unexpected})}"></th:block>
+</th:block>
+</body>
+</html>
