@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!--/* Reusable e-mail blocks (ported from the NestJS template's partials: button, codeblock). */-->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<p th:fragment="lead(text)" style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#4f5a61;" th:text="${text}">Lead</p>
+
+<th:block th:fragment="button(href, label)">
+  <p style="margin:22px 0 8px;">
+    <a th:href="${href}" style="display:inline-block;background:#0b6e79;color:#ffffff;text-decoration:none;font-family:'Space Grotesk',Arial,sans-serif;font-weight:600;font-size:15px;padding:13px 26px;border-radius:999px;" th:text="${label}">Button</a>
+  </p>
+  <p style="margin:12px 0 0;font-size:12px;line-height:1.5;color:#5f6b73;">
+    <span th:text="#{mail.common.copy-link}">Copy link</span><br>
+    <a th:href="${href}" style="color:#0b6e79;word-break:break-all;" th:text="${href}">link</a>
+  </p>
+</th:block>
+
+<th:block th:fragment="ghostButton(href, label)">
+  <p style="margin:22px 0 4px;">
+    <a th:href="${href}" style="display:inline-block;color:#0b6e79;text-decoration:none;font-family:'Space Grotesk',Arial,sans-serif;font-weight:600;font-size:15px;padding:11px 24px;border-radius:999px;border:1.5px solid #dde2e5;" th:text="${label}">Button</a>
+  </p>
+</th:block>
+
+<th:block th:fragment="codeblock(code)">
+  <div style="margin:6px 0 16px;padding:18px 22px;background:#f6f8f9;border:1.5px dashed #ffb020;border-radius:12px;">
+    <span style="display:block;margin:0 0 6px;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:#5f6b73;" th:text="#{mail.common.code-label}">Code</span>
+    <span style="display:block;font-family:'Space Grotesk',ui-monospace,monospace;font-weight:700;font-size:30px;letter-spacing:0.18em;color:#0b6e79;" th:text="${code}">000000</span>
+  </div>
+  <p style="margin:0 0 8px;font-size:12px;color:#c2410c;" th:text="#{mail.common.code-warning}">Warning</p>
+</th:block>
+
+<div th:fragment="note(text)" style="margin:6px 0 16px;padding:14px 18px;background:#fff1e8;border-radius:12px;text-align:left;font-size:13px;line-height:1.5;color:#141a1e;" th:text="${text}">Note</div>
+
+<p th:fragment="fineprint(text)" style="margin:14px 0 0;font-size:12px;line-height:1.5;color:#5f6b73;" th:text="${text}">Fine print</p>
+
+</body>
+</html>

@@ -1,0 +1,117 @@
+# Local development stack.
+#
+#   docker compose -f docker-compose.dev.yml up -d              # infrastructure only, run the API from your IDE
+#   docker compose -f docker-compose.dev.yml --profile app up -d  # infrastructure + API container
+#
+# Every value has a working default, so a fresh clone starts with no setup.
+# Override any of them in a root .env file (see .env.example).
+name: autocare-dev
+
+services:
+  database:
+    image: postgres:${POSTGRES_VERSION:-18-alpine}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-autocare}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-autocare}
+      POSTGRES_DB: ${POSTGRES_DB:-autocare}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # Postgres 18 images keep data under /var/lib/postgresql/<major>/, so mount the parent.
+      - db_data_autocare:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-autocare} -d ${POSTGRES_DB:-autocare}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:${REDIS_VERSION:-8.6.1}
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD:-autocare}
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data_autocare:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-autocare}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    # MinIO stopped publishing minio/minio publicly in 2025; this is the same mirror toutestcasa uses.
+    image: ghcr.io/zanned-amir/minio:${MINIO_VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-autocare}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-autocare2026}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data_autocare:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  smtp:
+    image: axllent/mailpit:${MAILPIT_VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+    volumes:
+      - mailpit_data_autocare:/data
+
+  api:
+    profiles: ["app"]
+    build: ./backend
+    restart: unless-stopped
+    # OAuth, SMS, Telegram and other optional keys come straight from .env;
+    # the hosts below are overridden because inside Docker the services have their own names.
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: database
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-autocare}
+      POSTGRES_USER: ${POSTGRES_USER:-autocare}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-autocare}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-autocare}
+      S3_ENDPOINT: http://minio:9000
+      S3_PUBLIC_ENDPOINT: http://localhost:${MINIO_API_PORT:-9000}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-autocare}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-autocare2026}
+      S3_BUCKET: ${S3_BUCKET:-autocare}
+      SMTP_HOST: smtp
+      SMTP_PORT: 1025
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-dev-only-secret-change-me}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200}
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+
+volumes:
+  db_data_autocare:
+  redis_data_autocare:
+  minio_data_autocare:
+  mailpit_data_autocare:

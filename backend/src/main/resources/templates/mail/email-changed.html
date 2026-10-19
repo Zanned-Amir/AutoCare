@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{mail/layout :: layout(#{mail.email-changed.title}, #{mail.email-changed.eyebrow}, '✓', ~{::content}, true)}">
+<body>
+<th:block th:fragment="content">
+  <th:block th:replace="~{mail/fragments :: lead(#{mail.email-changed.greeting(${name})})}"></th:block>
+  <th:block th:replace="~{mail/fragments :: lead(#{mail.email-changed.message})}"></th:block>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 16px;background:#f6f8f9;border-radius:12px;text-align:left;font-size:13px;">
+    <tr><td style="padding:14px 18px 6px;color:#5f6b73;" th:text="#{mail.email-changed.previous}">Label</td><td style="padding:14px 18px 6px;text-align:right;font-weight:600;color:#141a1e;" th:text="${previousEmail}">Value</td></tr>
+    <tr><td style="padding:6px 18px 6px;color:#5f6b73;" th:text="#{mail.email-changed.new}">Label</td><td style="padding:6px 18px 6px;text-align:right;font-weight:600;color:#141a1e;" th:text="${newEmail}">Value</td></tr>
+    <tr><td style="padding:6px 18px 14px;color:#5f6b73;" th:text="#{mail.common.date}">Label</td><td style="padding:6px 18px 14px;text-align:right;font-weight:600;color:#141a1e;" th:text="${date}">Value</td></tr>
+  </table>
+  <th:block th:replace="~{mail/fragments :: note(#{mail.email-changed.security})}"></th:block>
+  <th:block th:replace="~{mail/fragments :: ghostButton(${link}, #{mail.email-changed.cta})}"></th:block>
+</th:block>
+</body>
+</html>

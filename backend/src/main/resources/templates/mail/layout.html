@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!--/*
+  Shared e-mail layout (ported from the NestJS template's partials/layout.hbs).
+  Styles are inline on purpose: many e-mail clients drop <style> blocks.
+  Parameters: title, eyebrow, badge (a symbol shown in the round badge), content (the body block),
+  minimal (true for security e-mails: no marketing line in the footer).
+*/-->
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="layout(title, eyebrow, badge, content, minimal)" th:lang="${#locale.language}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title th:text="${title}">AutoCare TN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet">
+</head>
+<body style="margin:0;padding:0;background:#f6f8f9;font-family:Inter,'Segoe UI',Arial,sans-serif;color:#141a1e;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f8f9;">
+    <tr><td align="center" style="padding:28px 12px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
+
+        <tr><td align="center" style="padding:0 0 14px;">
+          <span style="display:inline-block;background:#0b6e79;color:#ffffff;font-family:'Space Grotesk',Arial,sans-serif;font-weight:700;font-size:14px;border-radius:8px;padding:6px 9px;">AC</span>
+          <span style="font-family:'Space Grotesk',Arial,sans-serif;font-weight:700;font-size:20px;color:#141a1e;margin-left:6px;vertical-align:middle;">AutoCare <span style="color:#0b6e79;">TN</span></span>
+        </td></tr>
+
+        <tr><td style="background:#ffffff;border:1px solid #dde2e5;border-radius:16px;padding:36px 36px 30px;text-align:center;">
+          <div style="margin:0 auto 18px;width:60px;height:60px;line-height:60px;border-radius:30px;background:#ebf7f8;color:#0b6e79;font-size:26px;" th:text="${badge}">✉</div>
+          <p style="margin:0 0 8px;font-family:'Space Grotesk',Arial,sans-serif;font-weight:600;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#8a5a00;" th:text="${eyebrow}">Eyebrow</p>
+          <h1 style="margin:0 0 14px;font-family:'Space Grotesk',Arial,sans-serif;font-weight:700;font-size:24px;line-height:1.25;color:#141a1e;" th:text="${title}">Title</h1>
+          <th:block th:replace="${content}"></th:block>
+        </td></tr>
+
+        <tr><td style="height:12px;line-height:12px;font-size:0;">&nbsp;</td></tr>
+        <tr><td style="background:#141a1e;border-radius:16px;padding:26px 28px;text-align:center;">
+          <p style="margin:0 0 6px;font-family:'Space Grotesk',Arial,sans-serif;font-weight:700;font-size:17px;color:#ffffff;">AutoCare TN</p>
+          <p th:unless="${minimal}" style="margin:0 0 12px;font-size:12px;color:#b9c3c9;" th:text="#{mail.common.tagline}">Tagline</p>
+          <p style="margin:0 0 12px;font-size:12px;color:#b9c3c9;" th:utext="#{mail.common.help(|<a href='mailto:${supportEmail}' style='color:#ffffff;'>${supportEmail}</a>|)}">Help</p>
+          <p style="margin:0;font-size:11px;color:#93a0a8;">
+            © <span th:text="${year}">2026</span> AutoCare TN ·
+            <a th:href="${webUrl + '/account'}" style="color:#ffffff;" th:text="#{mail.common.preferences}">Préférences</a>
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

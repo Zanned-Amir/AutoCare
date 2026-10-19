@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{mail/layout :: layout(#{mail.helpdesk-ticket-resolved.title}, #{mail.helpdesk-ticket-resolved.eyebrow}, '✓', ~{::content}, true)}">
+<body>
+<th:block th:fragment="content">
+  <th:block th:replace="~{mail/fragments :: lead(#{mail.helpdesk-ticket-resolved.greeting(${name})})}"></th:block>
+  <th:block th:replace="~{mail/fragments :: lead(#{mail.helpdesk-ticket-resolved.message(${ticketId}, ${subject})})}"></th:block>
+  <th:block th:replace="~{mail/fragments :: note(#{mail.helpdesk-ticket-resolved.reopen})}"></th:block>
+  <th:block th:replace="~{mail/fragments :: ghostButton(${link}, #{mail.helpdesk-ticket-resolved.cta})}"></th:block>
+</th:block>
+</body>
+</html>

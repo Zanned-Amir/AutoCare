@@ -1,0 +1,556 @@
+---
+title: AutoCare TN - Class Diagram v3 (simplified, one PostgreSQL schema per module)
+---
+classDiagram
+direction TB
+
+%% =====================================================================
+%% Solid arrows = relations inside one module
+%% Dotted arrows = links between modules, by ID only
+%% V1: auth, organization, provider, vehicle, catalog, diagnostic,
+%%     servicerequest, maintenance, notification, file
+%% V2: marketplace, subscription, billing
+%% =====================================================================
+
+%% ===================== AUTH =====================
+namespace auth {
+    class User {
+        -Long id
+        -String email
+        -String passwordHash
+        -String fullName
+        -String phone
+        -boolean active
+        -LocalDateTime createdAt
+    }
+    class RefreshToken {
+        -Long id
+        -Long userId
+        -String tokenHash
+        -LocalDateTime expiresAt
+        -LocalDateTime revokedAt
+    }
+    class AuthToken {
+        -Long id
+        -Long userId
+        -AuthTokenType type
+        -String tokenHash
+        -LocalDateTime expiresAt
+        -LocalDateTime usedAt
+    }
+    class AuthTokenType {
+        <<enumeration>>
+        EMAIL_VERIFICATION
+        PASSWORD_RESET
+    }
+    class Role {
+        -Long id
+        -String name
+        -String description
+        -Json permissions
+    }
+    class UserRole {
+        -Long id
+        -Long userId
+        -Long roleId
+    }
+}
+User "1" --> "0..*" RefreshToken
+User "1" --> "0..*" UserRole
+Role "1" --> "0..*" UserRole
+User "1" --> "0..*" AuthToken
+
+%% ===================== ORGANIZATION =====================
+%% The organization type defines what it is: a service provider or a seller
+namespace organization {
+    class Organization {
+        -Long id
+        -String name
+        -OrganizationType type
+        -OrganizationStatus status
+        -Long ownerId
+        -String description
+        -String phone
+        -String governorate
+        -String city
+        -String address
+        -String serviceZone
+        -Json workingHours
+        -LocalDateTime createdAt
+    }
+    class OrganizationMember {
+        -Long id
+        -Long organizationId
+        -Long userId
+        -MemberStatus status
+        -MemberRoleKey roleKey
+        -Json permissions
+        -LocalDateTime joinedAt
+    }
+    class OrganizationInvitation {
+        -Long id
+        -Long organizationId
+        -String email
+        -MemberRoleKey roleKey
+        -String tokenHash
+        -InvitationStatus status
+        -Long invitedBy
+        -LocalDateTime expiresAt
+        -LocalDateTime createdAt
+    }
+    class InvitationStatus {
+        <<enumeration>>
+        PENDING
+        ACCEPTED
+        EXPIRED
+        REVOKED
+    }
+    class OrganizationType {
+        <<enumeration>>
+        PROVIDER
+        SELLER
+    }
+    class OrganizationStatus {
+        <<enumeration>>
+        PENDING
+        APPROVED
+        SUSPENDED
+    }
+    class MemberStatus {
+        <<enumeration>>
+        INVITED
+        ACTIVE
+        SUSPENDED
+    }
+    class MemberRoleKey {
+        <<enumeration>>
+        PROVIDER_OWNER
+        PROVIDER_MANAGER
+        PROVIDER_RECEPTIONIST
+        PROVIDER_TECHNICIAN
+        SELLER_OWNER
+        SELLER_MANAGER
+        SELLER_STAFF
+        CUSTOM
+    }
+}
+Organization "1" --> "1..*" OrganizationMember : members
+Organization "1" --> "0..*" OrganizationInvitation : invitations
+
+%% ===================== FILE (generic, one table for all object storage references) =====================
+namespace file {
+    class File {
+        -Long id
+        -String storageKey
+        -String originalName
+        -String contentType
+        -long sizeBytes
+        -FileOwnerType ownerType
+        -Long ownerId
+        -FilePurpose purpose
+        -int position
+        -Long uploadedBy
+        -LocalDateTime createdAt
+    }
+    class FileOwnerType {
+        <<enumeration>>
+        USER
+        ORGANIZATION
+        VEHICLE
+        SERVICE_REQUEST
+        LISTING
+    }
+    class FilePurpose {
+        <<enumeration>>
+        AVATAR
+        LOGO
+        PHOTO
+        DOCUMENT
+    }
+}
+
+%% ===================== VEHICLE =====================
+namespace vehicle {
+    class Vehicle {
+        -Long id
+        -Long ownerId
+        -String brand
+        -String model
+        -int year
+        -String fuelType
+        -String engine
+        -int mileage
+        -LocalDateTime createdAt
+    }
+}
+
+%% ===================== CATALOG =====================
+namespace catalog {
+    class AutoService {
+        -Long id
+        -String name
+        -String description
+        -boolean active
+    }
+}
+
+%% ===================== PROVIDER =====================
+%% What a provider organization offers
+namespace provider {
+    class ProviderService {
+        -Long id
+        -Long organizationId
+        -Long serviceId
+        -boolean atHome
+        -BigDecimal indicativePrice
+    }
+}
+
+%% ===================== DIAGNOSTIC =====================
+namespace diagnostic {
+    class Symptom {
+        -Long id
+        -String label
+    }
+    class Question {
+        -Long id
+        -String text
+        -AnswerType answerType
+        -Json options
+        -int position
+    }
+    class AnswerType {
+        <<enumeration>>
+        YES_NO
+        SINGLE_CHOICE
+        MULTIPLE_CHOICE
+        NUMBER
+    }
+    class DiagnosticRule {
+        -Long id
+        -Json conditions
+        -int priority
+        -String possibleCause
+        -String recommendation
+        -Long serviceId
+    }
+    class Diagnostic {
+        -Long id
+        -Long userId
+        -Long vehicleId
+        -Json answers
+        -Long ruleId
+        -LocalDateTime createdAt
+    }
+}
+Symptom "1" --> "0..*" Question
+Symptom "1" --> "0..*" DiagnosticRule
+Diagnostic "0..*" --> "1" Symptom
+Diagnostic "0..*" --> "0..1" DiagnosticRule : result
+
+%% ===================== SERVICE REQUEST =====================
+namespace servicerequest {
+    class ServiceRequest {
+        -Long id
+        -Long userId
+        -Long vehicleId
+        -Long serviceId
+        -Long organizationId
+        -LocalDate desiredDate
+        -LocationType locationType
+        -String location
+        -String note
+        -String rejectionReason
+        -RequestStatus status
+        -LocalDateTime createdAt
+    }
+    class ServiceRequestStatusHistory {
+        -Long id
+        -Long serviceRequestId
+        -RequestStatus fromStatus
+        -RequestStatus toStatus
+        -Long changedBy
+        -LocalDateTime createdAt
+    }
+    class RequestStatus {
+        <<enumeration>>
+        PENDING
+        CONFIRMED
+        IN_PROGRESS
+        COMPLETED
+        REJECTED
+        CANCELLED
+    }
+    class LocationType {
+        <<enumeration>>
+        HOME
+        AT_PROVIDER
+    }
+}
+
+%% ===================== MAINTENANCE =====================
+%% One record per completed request, report fields merged in
+namespace maintenance {
+    class MaintenanceRecord {
+        -Long id
+        -Long vehicleId
+        -Long serviceId
+        -Long organizationId
+        -Long serviceRequestId
+        -LocalDate date
+        -int mileage
+        -String description
+        -String result
+        -String recommendations
+    }
+}
+
+%% ===================== NOTIFICATION =====================
+%% One Notification holds the content, one NotificationRecipient per user holds the read state
+namespace notification {
+    class Notification {
+        -Long id
+        -Long senderId
+        -Long organizationId
+        -String type
+        -String title
+        -String body
+        -String resourceType
+        -Long resourceId
+        -LocalDateTime createdAt
+    }
+    class NotificationRecipient {
+        -Long id
+        -Long notificationId
+        -Long userId
+        -LocalDateTime readAt
+        -LocalDateTime dismissedAt
+    }
+}
+
+%% ===================== MARKETPLACE (V2) =====================
+namespace marketplace {
+    class Listing {
+        -Long id
+        -Long userId
+        -Long organizationId
+        -Long categoryId
+        -String title
+        -String description
+        -BigDecimal price
+        -ItemCondition itemCondition
+        -String governorate
+        -String city
+        -String compatBrand
+        -String compatModel
+        -int compatYearMin
+        -int compatYearMax
+        -ListingStatus status
+        -LocalDateTime createdAt
+    }
+    class ListingCategory {
+        -Long id
+        -String name
+        -Long parentId
+    }
+    class Favorite {
+        -Long id
+        -Long userId
+        -Long listingId
+    }
+    class Conversation {
+        -Long id
+        -Long listingId
+        -Long buyerId
+        -Long sellerId
+    }
+    class Message {
+        -Long id
+        -Long senderId
+        -String content
+        -LocalDateTime sentAt
+    }
+    class ListingReport {
+        -Long id
+        -Long listingId
+        -Long reporterId
+        -String reason
+        -boolean handled
+        -LocalDateTime createdAt
+    }
+    class ItemCondition {
+        <<enumeration>>
+        NEW
+        USED
+    }
+    class ListingStatus {
+        <<enumeration>>
+        ACTIVE
+        SOLD
+        SUSPENDED
+    }
+}
+Listing "0..*" --> "1" ListingCategory
+ListingCategory "0..1" --> "0..*" ListingCategory : children
+Listing "1" --> "0..*" Favorite
+Listing "1" --> "0..*" Conversation
+Conversation "1" --> "0..*" Message
+Listing "1" --> "0..*" ListingReport
+
+%% ===================== SUBSCRIPTION (V2) =====================
+namespace subscription {
+    class Plan {
+        -Long id
+        -String name
+        -PlanAudience audience
+        -BigDecimal amount
+        -String currency
+        -String interval
+        -Json features
+        -boolean active
+    }
+    class PlanAudience {
+        <<enumeration>>
+        USER
+        PROVIDER
+        SELLER
+    }
+    class SubscriberType {
+        <<enumeration>>
+        USER
+        ORGANIZATION
+    }
+    class SubscriptionStatus {
+        <<enumeration>>
+        TRIALING
+        ACTIVE
+        PAST_DUE
+        CANCELED
+        EXPIRED
+    }
+    class Subscription {
+        -Long id
+        -SubscriberType subscriberType
+        -Long subscriberId
+        -Long planId
+        -SubscriptionStatus status
+        -LocalDateTime currentPeriodStart
+        -LocalDateTime currentPeriodEnd
+        -LocalDateTime canceledAt
+    }
+}
+Plan "1" --> "0..*" Subscription
+
+%% ===================== BILLING (V2) =====================
+namespace billing {
+    class Invoice {
+        -Long id
+        -PayerType payerType
+        -Long payerId
+        -Long subscriptionId
+        -String number
+        -String status
+        -String currency
+        -BigDecimal total
+        -Json items
+        -LocalDate dueDate
+        -LocalDateTime paidAt
+    }
+    class PayerType {
+        <<enumeration>>
+        USER
+        ORGANIZATION
+    }
+    class Payment {
+        -Long id
+        -Long invoiceId
+        -String status
+        -BigDecimal amount
+        -String currency
+        -String provider
+        -String providerPaymentId
+        -String failureReason
+        -LocalDateTime paidAt
+    }
+}
+Invoice "1" --> "0..*" Payment
+
+%% ===================== REVIEW (V2) =====================
+namespace review {
+    class Review {
+        -Long id
+        -Long serviceRequestId
+        -Long organizationId
+        -Long userId
+        -int rating
+        -String comment
+        -LocalDateTime createdAt
+    }
+}
+
+%% ===================== AUDIT (V2) =====================
+namespace audit {
+    class AuditLog {
+        -Long id
+        -Long actorId
+        -String action
+        -String targetType
+        -Long targetId
+        -Json details
+        -LocalDateTime createdAt
+    }
+}
+
+%% ===================== CROSS-MODULE LINKS (by ID only, no JPA relation) =====================
+%% auth and organization
+User ..> Organization : ownerId
+User ..> OrganizationMember : userId
+%% generic files, ownerType and ownerId point to any of these
+User ..> File : ownerType USER
+Organization ..> File : ownerType ORGANIZATION
+Vehicle ..> File : ownerType VEHICLE
+ServiceRequest ..> File : ownerType SERVICE_REQUEST
+Listing ..> File : ownerType LISTING
+%% vehicle and provider
+User ..> Vehicle : ownerId
+Organization ..> ProviderService : organizationId
+AutoService ..> ProviderService : serviceId
+%% diagnostic
+AutoService ..> DiagnosticRule : serviceId
+User ..> Diagnostic : userId
+Vehicle ..> Diagnostic : vehicleId
+%% service request
+User ..> ServiceRequest : userId
+Vehicle ..> ServiceRequest : vehicleId
+AutoService ..> ServiceRequest : serviceId
+Organization ..> ServiceRequest : organizationId
+%% maintenance, created by event when status becomes COMPLETED
+ServiceRequest ..> MaintenanceRecord : serviceRequestId
+Vehicle ..> MaintenanceRecord : vehicleId
+AutoService ..> MaintenanceRecord : serviceId
+Organization ..> MaintenanceRecord : organizationId
+%% notification
+Notification "1" --> "1..*" NotificationRecipient : recipients
+User ..> NotificationRecipient : userId
+User ..> Notification : senderId
+Organization ..> Notification : organizationId
+%% marketplace
+User ..> Listing : userId
+Organization ..> Listing : organizationId
+User ..> Favorite : userId
+User ..> Conversation : buyerId and sellerId
+%% subscription and billing
+User ..> Subscription : subscriberId when type USER
+Organization ..> Subscription : subscriberId when type ORGANIZATION
+Subscription ..> Invoice : subscriptionId
+User ..> Invoice : payerId when type USER
+Organization ..> Invoice : payerId when type ORGANIZATION
+%% additions
+ServiceRequest "1" --> "0..*" ServiceRequestStatusHistory : history
+User ..> OrganizationInvitation : invitedBy
+User ..> ServiceRequestStatusHistory : changedBy
+User ..> ListingReport : reporterId
+ServiceRequest ..> Review : serviceRequestId
+Organization ..> Review : organizationId
+User ..> Review : userId
+User ..> AuditLog : actorId
