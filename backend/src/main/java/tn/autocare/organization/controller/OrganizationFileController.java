@@ -12,18 +12,21 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import tn.autocare.file.api.FileFacade;
 import tn.autocare.file.api.FileOwnerType;
 import tn.autocare.file.api.FilePurpose;
 import tn.autocare.file.api.StoredFileDto;
 import tn.autocare.organization.api.OrganizationPermissions;
+import tn.autocare.organization.dto.ReorderFilesRequest;
 import tn.autocare.shared.security.CurrentUser;
 
 /**
@@ -89,6 +92,15 @@ public class OrganizationFileController {
 		fileFacade.deleteOwnerFile(FileOwnerType.ORGANIZATION, organizationId, fileId);
 	}
 
+	/** The first photo is the cover in search and on the profile. */
+	@PutMapping("/organizations/{organizationId}/photos/order")
+	@PreAuthorize(CAN_UPDATE)
+	public List<StoredFileDto> reorderOrganizationPhotos(@PathVariable Long organizationId,
+			@Valid @RequestBody ReorderFilesRequest request) {
+		return fileFacade.reorderOwnerFiles(FileOwnerType.ORGANIZATION, organizationId, FilePurpose.PHOTO,
+				request.fileIds());
+	}
+
 	@GetMapping("/organizations/{organizationId}/documents")
 	@PreAuthorize(CAN_UPDATE)
 	public List<StoredFileDto> listOrganizationDocuments(@PathVariable Long organizationId) {
@@ -149,6 +161,14 @@ public class OrganizationFileController {
 	@PreAuthorize(CAN_ADMIN)
 	public void deleteOrganizationPhotoForAdmin(@PathVariable Long organizationId, @PathVariable Long fileId) {
 		fileFacade.deleteOwnerFile(FileOwnerType.ORGANIZATION, organizationId, fileId);
+	}
+
+	@PutMapping("/admin/organizations/{organizationId}/photos/order")
+	@PreAuthorize(CAN_ADMIN)
+	public List<StoredFileDto> reorderAdminOrganizationPhotos(@PathVariable Long organizationId,
+			@Valid @RequestBody ReorderFilesRequest request) {
+		return fileFacade.reorderOwnerFiles(FileOwnerType.ORGANIZATION, organizationId, FilePurpose.PHOTO,
+				request.fileIds());
 	}
 
 	@GetMapping("/admin/organizations/{organizationId}/documents")

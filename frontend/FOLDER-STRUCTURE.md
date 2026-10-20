@@ -24,7 +24,8 @@ frontend/src/
       ui/                       Button, Card, Badge, Spinner, FormField, Icon (Lucide), Logo, FileButton, Select, chips, MultiSelectChip,
                                 Modal, Drawer, ConfirmDialog (overlay.ts: scroll lock + Escape), Stepper + StepRecap,
                                 FilterToolbar (search + Filtres + Trier + Réinitialiser), DropZone (drag & drop uploads),
-                                SearchSelect (one choice with a search field), ExportButton (CSV download with busy/error state) (+ index.ts barrel)
+                                SearchSelect (one choice with a search field), ExportButton (CSV download with busy/error state),
+                                Lightbox (full-screen photo viewer: arrows, Escape, original link) (+ index.ts barrel)
       ui/map.ts                 AppMap: Leaflet map of Tunisia (pins, "me" dot, pin picker); not in the barrel to keep Leaflet lazy
       utils/                    cn(), formatMoney(), formatNumber(), formatDistance(), csv.ts (toCsv with BOM + formula guard, fetchAllPages, downloadCsv)
     features/                   one folder per backend module the UI talks to
@@ -33,7 +34,8 @@ frontend/src/
         catalog.queries.ts      query keys + injectXxxQuery / injectXxxMutation
         catalog.schema.ts       Zod schemas for forms (mirror backend validation)
         catalog.types.ts        API types
-        catalog.permissions.ts  permission constants used by guards and templates
+        catalog.permissions.ts  permission constants used by guards and templates; routes and menus import
+                                *.permissions.ts only (never *.types.ts), to keep the initial bundle under its 600 kB budget
         catalog-filters.store.ts  client-only state for a screen (signalStore, provided by the page)
         components/             feature components (forms, cards, tables)
       auth/                     login/register/new-password forms, password reset and e-mail confirmation mutations
@@ -41,7 +43,7 @@ frontend/src/
       users/                    backoffice user management (admin only): user-create-form (account + invitation e-mail)
       roles/                    backoffice roles (toutestcasa "Rôles & permissions"): roles.types.ts (PERMISSION_CATALOG, wildcard toggle), permission-matrix (compares with the other roles), role-card, delete-role-dialog (reassign members), assign-roles-dialog (user page)
       vehicles/                 my vehicles: api, queries, schema, vehicle-form (with plate and VIN), vehicle-card
-      organizations/            organizations, members, admin approval: organization-application (6-step application with photos), organization-form (edit; mode "admin" picks the owner), booking-schedule-form (opening hours + slot length and capacity), organization-files-panel, members-panel (`admin` manages any team), status badge
+      organizations/            organizations, members, admin approval: organization-application (6-step application with photos), organization-form (edit; mode "admin" picks the owner), booking-schedule-form (opening hours + slot length and capacity), organization-files-panel (photo grid: cover badge, reorder, set as cover, lightbox), members-panel (`admin` manages any team), status badge
       admin-overview/           admin dashboard figures, each query gated by the section permission
       providers/                provider offer + public search: provider-services-panel, provider-service-form, provider-card
       helpdesk/                 support tickets for customers and agents: ticket-thread, new-ticket-form

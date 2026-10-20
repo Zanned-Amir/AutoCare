@@ -231,6 +231,8 @@ Endpoints (in the owner modules): `/vehicles/{id}/photos`, `/me/avatar`, `/organ
 
 Facade: `FileFacade` (upload, list files of an owner, delete one or all, signed URLs of several owners' first file).
 
+Photo order: `FileFacade.reorderOwnerFiles` puts an owner's files of one purpose in a given order (every id exactly once, `FILE_ORDER_INVALID` otherwise). Organizations use it through `PUT /organizations/{id}/photos/order` (`organization:update`) and `PUT /admin/organizations/{id}/photos/order` (`organization:approve`) with `{ fileIds }`: the first photo is the cover in search and on the public profile.
+
 ---
 
 ## 6. Module `vehicle`

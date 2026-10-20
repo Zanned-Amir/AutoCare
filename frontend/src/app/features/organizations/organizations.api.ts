@@ -77,6 +77,15 @@ export class OrganizationsApi {
     );
   }
 
+  /** Every photo id in the new order; the first one is the cover. */
+  reorderPhotos(organizationId: number, fileIds: number[], admin = false): Promise<StoredFile[]> {
+    return firstValueFrom(
+      this.http.put<StoredFile[]>(`${this.filesUrl(organizationId, admin)}/photos/order`, {
+        fileIds,
+      }),
+    );
+  }
+
   deletePhoto(organizationId: number, fileId: number, admin = false): Promise<void> {
     return firstValueFrom(
       this.http.delete<void>(`${this.filesUrl(organizationId, admin)}/photos/${fileId}`),

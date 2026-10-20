@@ -2,11 +2,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  inject,
   input,
   linkedSignal,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { problemMessage } from '@core/api/api';
 import { OrganizationForm } from '@features/organizations/components/organization-form';
@@ -319,11 +320,13 @@ export class AdminOrganizationsPage {
   readonly new = input<string>();
   protected readonly creating = linkedSignal(() => this.new() === '1');
   protected readonly createdName = signal<string | null>(null);
+  private readonly router = inject(Router);
 
+  /** Straight to the new organization's page, where its logo, photos and papers are added. */
   protected created(organization: Organization): void {
     this.creating.set(false);
     this.createdName.set(organization.name);
-    this.selectStatus(organization.status);
+    void this.router.navigate(['/admin/organizations', organization.id]);
   }
 
   protected applyFilters(values: FilterValues): void {

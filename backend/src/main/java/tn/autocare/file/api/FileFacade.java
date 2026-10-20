@@ -25,6 +25,14 @@ public interface FileFacade {
 	/** 404 when the file does not belong to this owner. */
 	void deleteOwnerFile(FileOwnerType ownerType, Long ownerId, Long fileId);
 
+	/**
+	 * Puts the owner's files of that purpose in the given order. {@code fileIds} must be
+	 * exactly those files ({@code FILE_ORDER_INVALID} otherwise). Returns them in the new
+	 * order.
+	 */
+	List<StoredFileDto> reorderOwnerFiles(FileOwnerType ownerType, Long ownerId, FilePurpose purpose,
+			List<Long> fileIds);
+
 	/** Removes every file of a deleted owner. */
 	void deleteOwnerFiles(FileOwnerType ownerType, Long ownerId);
 

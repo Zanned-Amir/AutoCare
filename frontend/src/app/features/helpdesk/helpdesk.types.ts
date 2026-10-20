@@ -1,11 +1,6 @@
 import { BadgeTone } from '@shared/ui';
 
-export const HelpdeskPermissions = {
-  TICKET_CREATE: 'ticket:create',
-  TICKET_READ: 'ticket:read',
-  TICKET_MANAGE: 'ticket:manage',
-  HELPDESK_CONFIGURE: 'helpdesk:configure',
-} as const;
+export { HelpdeskPermissions } from './helpdesk.permissions';
 
 export type TicketStatus = 'OPEN' | 'IN_PROGRESS' | 'WAITING_ON_CUSTOMER' | 'RESOLVED' | 'CLOSED';
 export type TicketPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';

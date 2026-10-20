@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -167,8 +168,20 @@ class FileFlowTests {
 		mvc.perform(multipart("/admin/organizations/" + orgId + "/documents")
 			.file(new MockMultipartFile("file", "rne.pdf", "application/pdf", "%PDF-1.7 rne".getBytes()))
 			.header("Authorization", admin)).andExpect(status().isCreated());
+		Integer firstId = JsonPath
+			.read(mvc.perform(get("/organizations/" + orgId + "/photos").header("Authorization", owner))
+				.andExpect(jsonPath("$.length()").value(2))
+				.andReturn()
+				.getResponse()
+				.getContentAsString(), "$[0].id");
+		mvc.perform(put("/organizations/" + orgId + "/photos/order").header("Authorization", owner)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"fileIds\":[" + photoId + "]}")).andExpect(jsonPath("$.code").value("FILE_ORDER_INVALID"));
+		mvc.perform(put("/admin/organizations/" + orgId + "/photos/order").header("Authorization", admin)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"fileIds\":[" + photoId + "," + firstId + "]}")).andExpect(status().isOk());
 		mvc.perform(get("/organizations/" + orgId + "/photos").header("Authorization", owner))
-			.andExpect(jsonPath("$.length()").value(2));
+			.andExpect(jsonPath("$[0].id").value(photoId));
 		// Search only lists providers that offer at least one service.
 		Integer serviceId = JsonPath
 			.read(mvc.perform(get("/catalog/services")).andReturn().getResponse().getContentAsString(), "$[0].id");

@@ -264,15 +264,15 @@ function toKey(label: string): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminRoleDetailPage {
-  /** Route param ("new" on the create route), bound by withComponentInputBinding(). */
-  readonly roleId = input<string>('new');
+  /** Route param; undefined on /admin/roles/new, which has none. */
+  readonly roleId = input<string | undefined>();
   /** `?edit=1` opens straight in edit mode. */
   readonly edit = input<string | undefined>();
 
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
   protected readonly inputClasses = inputClasses;
-  protected readonly creating = computed(() => this.roleId() === 'new');
+  protected readonly creating = computed(() => !this.roleId() || this.roleId() === 'new');
   private readonly id = computed(() => (this.creating() ? null : Number(this.roleId())));
   protected readonly role = injectRoleQuery(() => this.id());
   protected readonly roles = injectRolesQuery();

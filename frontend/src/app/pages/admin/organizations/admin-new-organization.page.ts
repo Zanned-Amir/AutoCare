@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router, RouterLink } from '@angular/router';
 
 import { AuthStore } from '@core/auth/auth.store';
+import { OrganizationFilesPanel } from '@features/organizations/components/organization-files-panel';
 import { OrganizationForm } from '@features/organizations/components/organization-form';
 import { OrganizationPermissions } from '@features/organizations/organizations.permissions';
 import { Organization } from '@features/organizations/organizations.types';
@@ -11,7 +12,7 @@ import { Button, Card } from '@shared/ui';
 /** Staff opening an organization from the backoffice, for themselves or for an account. */
 @Component({
   selector: 'app-admin-new-organization-page',
-  imports: [AdminPageHeader, Button, Card, OrganizationForm, RouterLink],
+  imports: [AdminPageHeader, Button, Card, OrganizationFilesPanel, OrganizationForm, RouterLink],
   template: `
     <app-admin-page-header
       title="Nouvelle entreprise"
@@ -42,6 +43,17 @@ import { Button, Card } from '@shared/ui';
             </button>
           </div>
         </app-card>
+        <div class="mt-6 max-w-4xl">
+          @if (canApprove()) {
+            <app-organization-files-panel admin [organizationId]="organization.id" />
+          } @else if (organization.ownerId === auth.user()?.id) {
+            <app-organization-files-panel [organizationId]="organization.id" />
+          } @else {
+            <p class="text-body-sm text-foreground-secondary">
+              Le propriétaire ajoutera son logo, ses photos et ses documents depuis son espace pro.
+            </p>
+          }
+        </div>
       } @else {
         <app-card class="max-w-4xl">
           <app-organization-form

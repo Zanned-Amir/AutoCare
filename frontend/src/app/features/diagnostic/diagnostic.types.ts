@@ -1,9 +1,6 @@
 import { BadgeTone } from '@shared/ui';
 
-export const DiagnosticPermissions = {
-  DIAGNOSTIC_USE: 'diagnostic:use',
-  DIAGNOSTIC_MANAGE: 'diagnostic:manage',
-} as const;
+export { DiagnosticPermissions } from './diagnostic.permissions';
 
 export const ANSWER_TYPES = ['YES_NO', 'SINGLE_CHOICE', 'MULTIPLE_CHOICE', 'NUMBER'] as const;
 export type AnswerType = (typeof ANSWER_TYPES)[number];

@@ -65,4 +65,12 @@ public class StoredFile extends BaseEntity {
 		return file;
 	}
 
+	/**
+	 * Place among the owner's files of the same purpose (0 = first, the cover for
+	 * photos).
+	 */
+	public void moveTo(int position) {
+		this.position = position;
+	}
+
 }
