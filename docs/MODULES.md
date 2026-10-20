@@ -279,6 +279,8 @@ Endpoints: `GET/POST/PUT/DELETE /organizations/{organizationId}/services` (works
 
 Facade: `ProviderFacade` (offered services of an organization, is a service offered at home).
 
+The search copy (`ProviderProfile`) is written from `OrganizationProfileChanged`, which carries `changedAt`. Creating then approving an organization sends two events handled at the same time: the row is created with `INSERT … ON CONFLICT DO NOTHING`, locked (`SELECT … FOR UPDATE`), and an event older than the one already applied (`source_changed_at`) is ignored, so a late "pending" event cannot hide an approved garage.
+
 ---
 
 ## 9. Module `diagnostic`

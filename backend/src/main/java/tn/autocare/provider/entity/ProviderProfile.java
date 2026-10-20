@@ -1,5 +1,7 @@
 package tn.autocare.provider.entity;
 
+import java.time.Instant;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -60,10 +62,20 @@ public class ProviderProfile extends BaseEntity {
 	@Column(name = "approximate_location", nullable = false)
 	private boolean approximateLocation = true;
 
-	public static ProviderProfile of(Long organizationId) {
-		ProviderProfile profile = new ProviderProfile();
-		profile.organizationId = organizationId;
-		return profile;
+	/** When the organization change copied here happened. */
+	@Column(name = "source_changed_at")
+	private Instant sourceChangedAt;
+
+	/**
+	 * False for an event older than the one already applied (events may run
+	 * concurrently).
+	 */
+	public boolean acceptsChangeAt(Instant changedAt) {
+		if (sourceChangedAt != null && changedAt.isBefore(sourceChangedAt)) {
+			return false;
+		}
+		sourceChangedAt = changedAt;
+		return true;
 	}
 
 	public void sync(String name, String description, String phone, String governorate, String city, String address,

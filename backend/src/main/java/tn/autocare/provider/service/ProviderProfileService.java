@@ -28,8 +28,13 @@ public class ProviderProfileService {
 
 	@Transactional
 	public void syncProfile(OrganizationProfileChanged event) {
-		ProviderProfile profile = profileRepository.findByOrganizationId(event.organizationId())
-			.orElseGet(() -> ProviderProfile.of(event.organizationId()));
+		// Create-then-approve sends two events handled at once: insert safely, then lock.
+		profileRepository.insertIfMissing(event.organizationId(), event.name(), event.phone(), event.governorate(),
+				event.city());
+		ProviderProfile profile = profileRepository.lockByOrganizationId(event.organizationId()).orElseThrow();
+		if (!profile.acceptsChangeAt(event.changedAt())) {
+			return;
+		}
 		boolean visible = event.type() == OrganizationType.PROVIDER && event.status() == OrganizationStatus.APPROVED;
 		profile.sync(event.name(), event.description(), event.phone(), event.governorate(), event.city(),
 				event.address(), event.serviceZone(), visible);

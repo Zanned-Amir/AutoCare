@@ -47,11 +47,15 @@ export function injectUsersCsvExport() {
   };
 }
 
-export function injectUsersQuery(params: () => UserSearchParams) {
+export function injectUsersQuery(
+  params: () => UserSearchParams,
+  enabled: () => boolean = () => true,
+) {
   const api = inject(UsersApi);
   return injectQuery(() => ({
     queryKey: userKeys.search(params()),
     queryFn: () => api.searchUsers(params()),
+    enabled: enabled(),
     placeholderData: keepPreviousData,
   }));
 }

@@ -5,13 +5,32 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
+import jakarta.persistence.LockModeType;
 import tn.autocare.provider.entity.ProviderProfile;
 
 public interface ProviderProfileRepository extends JpaRepository<ProviderProfile, Long> {
 
 	Optional<ProviderProfile> findByOrganizationId(Long organizationId);
+
+	/**
+	 * Creates the row if missing without failing when a concurrent sync created it first.
+	 */
+	@Modifying
+	@Query(value = """
+			INSERT INTO provider.provider_profiles (organization_id, name, phone, governorate, city)
+			VALUES (:organizationId, :name, :phone, :governorate, :city)
+			ON CONFLICT (organization_id) DO NOTHING
+			""", nativeQuery = true)
+	void insertIfMissing(Long organizationId, String name, String phone, String governorate, String city);
+
+	/** Serializes concurrent syncs of one organization. */
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("select p from ProviderProfile p where p.organizationId = :organizationId")
+	Optional<ProviderProfile> lockByOrganizationId(Long organizationId);
 
 	Optional<ProviderProfile> findByOrganizationIdAndVisibleTrue(Long organizationId);
 
