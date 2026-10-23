@@ -1,0 +1,22 @@
+[
+  { "name": "Peugeot", "models": ["106", "206", "207", "208", "301", "307", "308", "407", "508", "2008", "3008", "5008", "Partner", "Expert", "Boxer"] },
+  { "name": "Renault", "models": ["Clio", "Symbol", "Megane", "Captur", "Kadjar", "Koleos", "Kangoo", "Twingo", "Scenic", "Fluence", "Master", "Trafic"] },
+  { "name": "Dacia", "models": ["Sandero", "Logan", "Duster", "Dokker", "Lodgy", "Jogger", "Spring"] },
+  { "name": "Citroën", "models": ["C1", "C3", "C3 Aircross", "C4", "C4 Cactus", "C5 Aircross", "C-Elysée", "Berlingo", "Jumpy", "Jumper"] },
+  { "name": "Volkswagen", "models": ["Polo", "Golf", "Passat", "Tiguan", "T-Roc", "Caddy", "Jetta", "Touareg", "Transporter"] },
+  { "name": "Seat", "models": ["Ibiza", "Leon", "Arona", "Ateca", "Toledo", "Cordoba", "Altea"] },
+  { "name": "Skoda", "models": ["Fabia", "Octavia", "Rapid", "Superb", "Kodiaq", "Karoq"] },
+  { "name": "Kia", "models": ["Picanto", "Rio", "Cerato", "Stonic", "Seltos", "Sportage", "Sorento", "Carens"] },
+  { "name": "Hyundai", "models": ["i10", "i20", "i30", "Accent", "Elantra", "Creta", "Tucson", "Santa Fe", "Kona"] },
+  { "name": "Toyota", "models": ["Yaris", "Corolla", "Auris", "Hilux", "RAV4", "C-HR", "Land Cruiser", "Prado", "Avensis"] },
+  { "name": "Fiat", "models": ["500", "Panda", "Punto", "Tipo", "Doblo", "Fiorino", "Ducato"] },
+  { "name": "Suzuki", "models": ["Alto", "Celerio", "Swift", "Baleno", "Vitara", "Jimny", "Ertiga"] },
+  { "name": "Chery", "models": ["QQ", "Tiggo 2", "Tiggo 4", "Tiggo 7", "Tiggo 8", "Arrizo 5"] },
+  { "name": "Mercedes-Benz", "models": ["Classe A", "Classe C", "Classe E", "CLA", "GLA", "GLC", "Sprinter"] },
+  { "name": "BMW", "models": ["Série 1", "Série 3", "Série 5", "X1", "X3", "X5"] },
+  { "name": "Audi", "models": ["A1", "A3", "A4", "A6", "Q2", "Q3", "Q5"] },
+  { "name": "Ford", "models": ["Fiesta", "Focus", "Kuga", "Transit", "Ranger"] },
+  { "name": "Opel", "models": ["Corsa", "Astra", "Mokka", "Insignia", "Combo"] },
+  { "name": "Nissan", "models": ["Micra", "Qashqai", "Juke", "X-Trail", "Navara"] },
+  { "name": "Isuzu", "models": ["D-Max"] }
+]

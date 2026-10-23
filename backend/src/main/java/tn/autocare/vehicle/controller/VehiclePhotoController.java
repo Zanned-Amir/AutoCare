@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,45 +21,53 @@ import tn.autocare.file.api.FileFacade;
 import tn.autocare.file.api.FileOwnerType;
 import tn.autocare.file.api.FilePurpose;
 import tn.autocare.file.api.StoredFileDto;
+import tn.autocare.file.api.UploadFileCommand;
+import tn.autocare.shared.exception.AppException;
+import tn.autocare.shared.exception.ErrorCode;
 import tn.autocare.shared.security.CurrentUser;
 import tn.autocare.vehicle.api.VehiclePermissions;
 import tn.autocare.vehicle.service.VehicleService;
 
-/** Photos of the signed-in client's own vehicle (up to 8). */
 @Tag(name = "Vehicles")
 @RestController
 @RequestMapping("/vehicles/{vehicleId}/photos")
 @RequiredArgsConstructor
 public class VehiclePhotoController {
 
-	private final VehicleService vehicleService;
+    private final FileFacade fileFacade;
 
-	private final FileFacade fileFacade;
+    private final VehicleService vehicleService;
 
-	@GetMapping
-	@PreAuthorize("@perm.has('" + VehiclePermissions.VEHICLE_READ + "')")
-	public List<StoredFileDto> listVehiclePhotos(@PathVariable Long vehicleId) {
-		vehicleService.checkMyVehicle(CurrentUser.id(), vehicleId);
-		return fileFacade.listOwnerFiles(FileOwnerType.VEHICLE, vehicleId, FilePurpose.PHOTO);
-	}
+    @GetMapping
+    @PreAuthorize("@perm.has('" + VehiclePermissions.VEHICLE_READ + "')")
+    public List<StoredFileDto> list(@PathVariable Long vehicleId) {
+        Long ownerId = CurrentUser.id();
+        vehicleService.checkMyVehicle(ownerId, vehicleId);
+        return fileFacade.listOwnerFiles(FileOwnerType.VEHICLE, vehicleId, FilePurpose.PHOTO);
+    }
 
-	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	@ResponseStatus(HttpStatus.CREATED)
-	@PreAuthorize("@perm.has('" + VehiclePermissions.VEHICLE_UPDATE + "')")
-	public StoredFileDto uploadVehiclePhoto(@PathVariable Long vehicleId, @RequestParam MultipartFile file)
-			throws IOException {
-		Long userId = CurrentUser.id();
-		vehicleService.checkMyVehicle(userId, vehicleId);
-		return fileFacade
-			.uploadFile(Uploads.toCommand(file, FileOwnerType.VEHICLE, vehicleId, FilePurpose.PHOTO, userId));
-	}
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("@perm.has('" + VehiclePermissions.VEHICLE_UPDATE + "')")
+    public StoredFileDto upload(@PathVariable Long vehicleId, @RequestParam("file") MultipartFile file) {
+        Long ownerId = CurrentUser.id();
+        vehicleService.checkMyVehicle(ownerId, vehicleId);
+        try (var content = file.getInputStream()) {
+            return fileFacade.uploadFile(new UploadFileCommand(FileOwnerType.VEHICLE, vehicleId, FilePurpose.PHOTO,
+                    file.getOriginalFilename(), file.getContentType(), file.getSize(), content, ownerId));
+        }
+        catch (IOException e) {
+            throw new AppException(ErrorCode.FILE_UPLOAD_FAILED, "Could not read uploaded file");
+        }
+    }
 
-	@DeleteMapping("/{fileId}")
-	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@PreAuthorize("@perm.has('" + VehiclePermissions.VEHICLE_UPDATE + "')")
-	public void deleteVehiclePhoto(@PathVariable Long vehicleId, @PathVariable Long fileId) {
-		vehicleService.checkMyVehicle(CurrentUser.id(), vehicleId);
-		fileFacade.deleteOwnerFile(FileOwnerType.VEHICLE, vehicleId, fileId);
-	}
+    @DeleteMapping("/{fileId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("@perm.has('" + VehiclePermissions.VEHICLE_DELETE + "')")
+    public void delete(@PathVariable Long vehicleId, @PathVariable Long fileId) {
+        Long ownerId = CurrentUser.id();
+        vehicleService.checkMyVehicle(ownerId, vehicleId);
+        fileFacade.deleteOwnerFile(FileOwnerType.VEHICLE, vehicleId, fileId);
+    }
 
 }

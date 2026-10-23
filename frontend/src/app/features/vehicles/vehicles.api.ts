@@ -5,7 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { API_URL } from '@core/api/api';
 import { StoredFile } from '@shared/types/stored-file';
 import { VehicleFormValue } from './vehicles.schema';
-import { Vehicle } from './vehicles.types';
+import { Vehicle, VehicleMake } from './vehicles.types';
 
 /** Empty plate and VIN are sent as null. */
 function toBody(value: VehicleFormValue) {
@@ -55,4 +55,8 @@ export class VehiclesApi {
   deletePhoto(id: number, fileId: number): Promise<void> {
     return firstValueFrom(this.http.delete<void>(`${this.baseUrl}/${id}/photos/${fileId}`));
   }
+
+  getCatalog(): Promise<VehicleMake[]> {
+  return firstValueFrom(this.http.get<VehicleMake[]>(`${this.baseUrl}/catalog`));
+}
 }
