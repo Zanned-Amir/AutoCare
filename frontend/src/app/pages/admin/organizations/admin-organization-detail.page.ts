@@ -176,6 +176,23 @@ const dateFormat = new Intl.DateTimeFormat('fr-TN', { dateStyle: 'medium' });
       } @else if (organization.data(); as current) {
         <div class="grid gap-6 xl:grid-cols-[3fr_2fr]">
           <app-card>
+            @if (files.photos.data()?.[0] || files.logo.data()) {
+              <!-- What clients see first: the cover photo and the logo. -->
+              <div
+                class="relative -mx-6 -mt-6 mb-5 h-40 overflow-hidden rounded-t-[inherit] bg-background-subtle sm:h-52"
+              >
+                @if (files.photos.data()?.[0]; as cover) {
+                  <img [src]="cover.url" alt="Photo de couverture" class="size-full object-cover" />
+                }
+                @if (files.logo.data(); as logo) {
+                  <img
+                    [src]="logo.url"
+                    alt="Logo"
+                    class="absolute bottom-3 left-4 size-16 rounded-2xl border-2 border-surface bg-surface object-cover shadow-card"
+                  />
+                }
+              </div>
+            }
             <h2 class="mb-1 text-h4">Profil</h2>
             <p class="mb-5 text-body-sm text-foreground-secondary">
               {{ typeLabels[current.type] }} · créée le {{ format(current.createdAt) }}
@@ -310,7 +327,7 @@ export class AdminOrganizationDetailPage {
   });
 
   protected readonly confirmApprove = signal(false);
-  private readonly files = injectOrganizationFilesQueries(
+  protected readonly files = injectOrganizationFilesQueries(
     () => this.id(),
     () => true,
   );

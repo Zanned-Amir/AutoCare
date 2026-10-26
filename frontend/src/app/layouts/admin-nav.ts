@@ -1,11 +1,11 @@
 import { CatalogPermissions } from '@features/catalog/catalog.permissions';
 import { IconName } from '@shared/ui';
-import { DiagnosticPermissions } from '@features/diagnostic/diagnostic.types';
+import { DiagnosticPermissions } from '@features/diagnostic/diagnostic.permissions';
 import { ApiKeyPermissions } from '@features/api-keys/api-keys.types';
-import { HelpdeskPermissions } from '@features/helpdesk/helpdesk.types';
+import { HelpdeskPermissions } from '@features/helpdesk/helpdesk.permissions';
 import { OrganizationPermissions } from '@features/organizations/organizations.permissions';
-import { ServiceRequestPermissions } from '@features/service-requests/service-requests.types';
-import { RolePermissions } from '@features/roles/roles.types';
+import { ServiceRequestPermissions } from '@features/service-requests/service-requests.permissions';
+import { RolePermissions } from '@features/roles/roles.permissions';
 import { UserPermissions } from '@features/users/users.permissions';
 
 export interface AdminNavItem {

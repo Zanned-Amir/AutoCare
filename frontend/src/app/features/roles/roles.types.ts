@@ -1,9 +1,6 @@
 import { grants } from '@core/auth/permission';
 
-export const RolePermissions = {
-  ROLE_READ: 'role:read',
-  ROLE_MANAGE: 'role:manage',
-} as const;
+export { RolePermissions } from './roles.permissions';
 
 /** Mirrors the backend RoleResponse. */
 export interface Role {

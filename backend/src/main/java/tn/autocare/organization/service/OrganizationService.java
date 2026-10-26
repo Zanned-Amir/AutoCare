@@ -1,5 +1,6 @@
 package tn.autocare.organization.service;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -184,11 +185,11 @@ public class OrganizationService {
 	}
 
 	private void publishProfileChanged(Organization organization) {
-		events.publishEvent(
-				new OrganizationProfileChanged(organization.getId(), organization.getName(), organization.getType(),
-						organization.getStatus(), organization.getDescription(), organization.getPhone(),
-						organization.getGovernorate(), organization.getCity(), organization.getAddress(),
-						organization.getServiceZone(), organization.getLatitude(), organization.getLongitude()));
+		events.publishEvent(new OrganizationProfileChanged(organization.getId(), organization.getName(),
+				organization.getType(), organization.getStatus(), organization.getDescription(),
+				organization.getPhone(), organization.getGovernorate(), organization.getCity(),
+				organization.getAddress(), organization.getServiceZone(), organization.getLatitude(),
+				organization.getLongitude(), Instant.now()));
 	}
 
 	private static void checkGovernorate(String governorate) {

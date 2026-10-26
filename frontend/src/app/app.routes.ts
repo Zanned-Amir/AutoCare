@@ -9,11 +9,11 @@ import {
 } from '@core/auth/permission.guard';
 import { ApiKeyPermissions } from '@features/api-keys/api-keys.types';
 import { CatalogPermissions } from '@features/catalog/catalog.permissions';
-import { DiagnosticPermissions } from '@features/diagnostic/diagnostic.types';
-import { HelpdeskPermissions } from '@features/helpdesk/helpdesk.types';
+import { DiagnosticPermissions } from '@features/diagnostic/diagnostic.permissions';
+import { HelpdeskPermissions } from '@features/helpdesk/helpdesk.permissions';
 import { OrganizationPermissions } from '@features/organizations/organizations.permissions';
-import { ServiceRequestPermissions } from '@features/service-requests/service-requests.types';
-import { RolePermissions } from '@features/roles/roles.types';
+import { ServiceRequestPermissions } from '@features/service-requests/service-requests.permissions';
+import { RolePermissions } from '@features/roles/roles.permissions';
 import { UserPermissions } from '@features/users/users.permissions';
 import { VehiclePermissions } from '@features/vehicles/vehicles.permissions';
 import { adminHome } from '@layouts/admin-home.guard';

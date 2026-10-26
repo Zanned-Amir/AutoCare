@@ -35,7 +35,7 @@ export class UsersApi {
         fullName: value.fullName.trim(),
         phone: value.phone.trim() || null,
         locale: value.locale,
-        roles: value.admin ? ['USER', 'ADMIN'] : ['USER'],
+        roles: value.roles,
       }),
     );
   }

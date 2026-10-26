@@ -1,8 +1,19 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  linkedSignal,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { problemMessage } from '@core/api/api';
 import { AuthStore } from '@core/auth/auth.store';
+import { AssignRolesDialog } from '@features/roles/components/assign-roles-dialog';
+import { injectRolesQuery } from '@features/roles/roles.queries';
+import { RolePermissions } from '@features/roles/roles.permissions';
 import { UserCreateForm } from '@features/users/components/user-create-form';
 import { UserPermissions } from '@features/users/users.permissions';
 import {
@@ -27,16 +38,14 @@ import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
 
 const DEFAULT_SORT = 'createdAt,desc';
 
-const FILTER_GROUPS: FilterGroup[] = [
-  {
-    key: 'role',
-    label: 'Rôle',
-    options: [
-      { value: 'USER', label: 'Client' },
-      { value: 'SUPPORT', label: 'Support' },
-      { value: 'ADMIN', label: 'Admin' },
-    ],
-  },
+/** Used until the role list is loaded, or without role:read. */
+const SEEDED_ROLES = [
+  { value: 'USER', label: 'Client' },
+  { value: 'SUPPORT', label: 'Agent support' },
+  { value: 'ADMIN', label: 'Administrateur' },
+];
+
+const STATUS_GROUPS: FilterGroup[] = [
   {
     key: 'status',
     label: 'Statut',
@@ -67,6 +76,7 @@ const SORT_OPTIONS = [
     RouterLink,
     Spinner,
     UserCreateForm,
+    AssignRolesDialog,
   ],
   template: `
     <app-admin-page-header
@@ -114,7 +124,7 @@ const SORT_OPTIONS = [
       <app-filter-toolbar
         searchPlaceholder="Nom, e-mail ou téléphone"
         [search]="q()"
-        [groups]="filterGroups"
+        [groups]="filterGroups()"
         [values]="filterValues()"
         [sortOptions]="sortOptions"
         [sort]="sort()"
@@ -149,7 +159,7 @@ const SORT_OPTIONS = [
                 <div class="flex flex-wrap items-center gap-2">
                   @for (role of user.roles; track role) {
                     <app-badge [tone]="role === 'ADMIN' ? 'primary' : 'neutral'">{{
-                      role
+                      roleLabel(role)
                     }}</app-badge>
                   }
                   @if (!user.passwordSet) {
@@ -161,15 +171,17 @@ const SORT_OPTIONS = [
                     <app-badge tone="error">Suspendu</app-badge>
                   }
                   @if (canManage() && user.id !== auth.user()?.id) {
-                    <button
-                      appButton
-                      variant="ghost"
-                      size="sm"
-                      type="button"
-                      (click)="toggleAdmin(user)"
-                    >
-                      {{ user.roles.includes('ADMIN') ? 'Retirer admin' : 'Rendre admin' }}
-                    </button>
+                    @if (canReadRoles()) {
+                      <button
+                        appButton
+                        variant="ghost"
+                        size="sm"
+                        type="button"
+                        (click)="rolesError.set(null); assigning.set(user)"
+                      >
+                        Rôles
+                      </button>
+                    }
                     <button
                       appButton
                       [variant]="user.active ? 'ghost' : 'secondary'"
@@ -220,29 +232,54 @@ const SORT_OPTIONS = [
         }
       </app-card>
     </div>
+
+    <app-assign-roles-dialog
+      [open]="assigning() !== null"
+      [current]="assigning()?.roles ?? []"
+      [busy]="mutations.setRoles.isPending()"
+      [error]="rolesError()"
+      (saved)="saveRoles($event)"
+      (cancelled)="assigning.set(null)"
+    />
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminUsersPage {
   protected readonly auth = inject(AuthStore);
   protected readonly q = signal('');
-  protected readonly role = signal<string | null>(null);
+  /** ?role= (link from a role's members) preselects the filter. */
+  readonly role = input<string | undefined>();
+  protected readonly roleFilter = linkedSignal<string | null>(() => this.role() ?? null);
   protected readonly active = signal<boolean | null>(null);
   protected readonly sort = signal(DEFAULT_SORT);
   protected readonly pageIndex = signal(0);
   protected readonly actionError = signal<string | null>(null);
-  protected readonly filterGroups = FILTER_GROUPS;
+  protected readonly canReadRoles = computed(() => this.auth.can(RolePermissions.ROLE_READ));
+  private readonly roles = injectRolesQuery(() => this.canReadRoles());
+  /** Custom roles appear in the filter once the list is loaded. */
+  protected readonly filterGroups = computed<FilterGroup[]>(() => [
+    {
+      key: 'role',
+      label: 'Rôle',
+      options:
+        this.roles.data()?.map((role) => ({ value: role.name, label: role.label })) ?? SEEDED_ROLES,
+    },
+    ...STATUS_GROUPS,
+  ]);
+  protected readonly assigning = signal<AdminUser | null>(null);
+  protected readonly rolesError = signal<string | null>(null);
   protected readonly sortOptions = SORT_OPTIONS;
   protected readonly filterValues = computed<FilterValues>(() => ({
-    role: this.role(),
+    role: this.roleFilter(),
     status: this.active() === null ? null : this.active() ? 'active' : 'suspended',
   }));
   protected readonly narrowed = computed(
-    () => !!this.q() || !!this.role() || this.active() !== null || this.sort() !== DEFAULT_SORT,
+    () =>
+      !!this.q() || !!this.roleFilter() || this.active() !== null || this.sort() !== DEFAULT_SORT,
   );
   protected readonly users = injectUsersQuery(() => ({
     q: this.q(),
-    role: this.role(),
+    role: this.roleFilter(),
     active: this.active(),
     sort: this.sort(),
     page: this.pageIndex(),
@@ -251,12 +288,12 @@ export class AdminUsersPage {
   protected readonly exportCsv = () =>
     this.exportUsers({
       q: this.q(),
-      role: this.role(),
+      role: this.roleFilter(),
       active: this.active(),
       sort: this.sort(),
       page: 0,
     });
-  private readonly mutations = injectUserMutations();
+  protected readonly mutations = injectUserMutations();
   protected readonly creating = signal(false);
   protected readonly createdEmail = signal<string | null>(null);
 
@@ -272,14 +309,14 @@ export class AdminUsersPage {
   }
 
   protected applyFilters(values: FilterValues): void {
-    this.role.set(values['role'] ?? null);
+    this.roleFilter.set(values['role'] ?? null);
     this.active.set(values['status'] ? values['status'] === 'active' : null);
     this.pageIndex.set(0);
   }
 
   protected resetFilters(): void {
     this.q.set('');
-    this.role.set(null);
+    this.roleFilter.set(null);
     this.active.set(null);
     this.sort.set(DEFAULT_SORT);
     this.pageIndex.set(0);
@@ -312,13 +349,22 @@ export class AdminUsersPage {
     this.actionError.set(null);
   }
 
-  protected toggleAdmin(user: AdminUser): void {
-    const roles = user.roles.includes('ADMIN')
-      ? user.roles.filter((role) => role !== 'ADMIN')
-      : [...user.roles, 'ADMIN'];
-    this.run(
-      this.mutations.setRoles.mutateAsync({ id: user.id, roles: roles.length ? roles : ['USER'] }),
+  protected roleLabel(name: string): string {
+    return (
+      this.roles.data()?.find((role) => role.name === name)?.label ??
+      SEEDED_ROLES.find((role) => role.value === name)?.label ??
+      name
     );
+  }
+
+  protected saveRoles(roles: string[]): void {
+    const user = this.assigning();
+    if (!user) return;
+    this.rolesError.set(null);
+    this.mutations.setRoles
+      .mutateAsync({ id: user.id, roles })
+      .then(() => this.assigning.set(null))
+      .catch((error: unknown) => this.rolesError.set(problemMessage(error, 'Action impossible')));
   }
 
   private run(action: Promise<unknown>): void {

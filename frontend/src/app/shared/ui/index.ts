@@ -11,6 +11,7 @@ export * from './file-button';
 export * from './filter-toolbar';
 export * from './form-field';
 export * from './icon';
+export * from './lightbox';
 export * from './logo';
 export * from './modal';
 export * from './multi-select-chip';

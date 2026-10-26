@@ -14,6 +14,8 @@ import { problemMessage } from '@core/api/api';
 import { AuthStore } from '@core/auth/auth.store';
 import { AuditTrail } from '@features/audit/components/audit-trail';
 import { AuditPermissions } from '@features/audit/audit.types';
+import { UserPermissions } from '@features/users/users.permissions';
+import { injectUsersQuery } from '@features/users/users.queries';
 import { DeleteRoleDialog } from '@features/roles/components/delete-role-dialog';
 import { PermissionMatrix } from '@features/roles/components/permission-matrix';
 import {
@@ -243,6 +245,46 @@ function toKey(label: string): string {
           }
         </form>
 
+        @if (!creating() && canReadUsers() && role.data(); as current) {
+          <app-card class="max-w-3xl p-0">
+            <div class="flex items-center justify-between gap-3 border-b border-border-subtle p-5">
+              <h2 class="text-h4">Membres</h2>
+              <app-badge tone="neutral">{{ members.data()?.page?.totalElements ?? 0 }}</app-badge>
+            </div>
+            <ul class="divide-y divide-border-subtle">
+              @for (user of members.data()?.content ?? []; track user.id) {
+                <li class="flex items-center justify-between gap-3 px-5 py-3">
+                  <div class="min-w-0">
+                    <a
+                      [routerLink]="['/admin/users', user.id]"
+                      class="text-label text-foreground hover:text-primary hover:underline"
+                      >{{ user.fullName }}</a
+                    >
+                    <p class="truncate text-caption text-foreground-muted">{{ user.email }}</p>
+                  </div>
+                  @if (!user.active) {
+                    <app-badge tone="error">Suspendu</app-badge>
+                  }
+                </li>
+              } @empty {
+                <li class="px-5 py-4 text-body-sm text-foreground-muted">
+                  Aucun compte n’a ce rôle. Attribuez-le depuis la fiche d’un utilisateur.
+                </li>
+              }
+            </ul>
+            @if (
+              (members.data()?.page?.totalElements ?? 0) > (members.data()?.content?.length ?? 0)
+            ) {
+              <a
+                class="block border-t border-border-subtle px-5 py-3 text-body-sm text-primary hover:underline"
+                routerLink="/admin/users"
+                [queryParams]="{ role: current.name }"
+                >Voir tous les membres</a
+              >
+            }
+          </app-card>
+        }
+
         @if (!creating() && canAudit() && role.data(); as current) {
           <app-card class="max-w-3xl">
             <h2 class="mb-3 text-h4">Historique</h2>
@@ -264,21 +306,33 @@ function toKey(label: string): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminRoleDetailPage {
-  /** Route param ("new" on the create route), bound by withComponentInputBinding(). */
-  readonly roleId = input<string>('new');
+  /** Route param; undefined on /admin/roles/new, which has none. */
+  readonly roleId = input<string | undefined>();
   /** `?edit=1` opens straight in edit mode. */
   readonly edit = input<string | undefined>();
 
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
   protected readonly inputClasses = inputClasses;
-  protected readonly creating = computed(() => this.roleId() === 'new');
+  protected readonly creating = computed(() => !this.roleId() || this.roleId() === 'new');
   private readonly id = computed(() => (this.creating() ? null : Number(this.roleId())));
   protected readonly role = injectRoleQuery(() => this.id());
   protected readonly roles = injectRolesQuery();
   protected readonly mutations = injectRoleMutations();
   protected readonly canManage = computed(() => this.auth.can(RolePermissions.ROLE_MANAGE));
   protected readonly canAudit = computed(() => this.auth.can(AuditPermissions.AUDIT_READ));
+  protected readonly canReadUsers = computed(() => this.auth.can(UserPermissions.USER_READ));
+  /** First page of the accounts holding the role (users search filtered by role). */
+  protected readonly members = injectUsersQuery(
+    () => ({
+      q: '',
+      role: this.role.data()?.name ?? null,
+      active: null,
+      sort: 'fullName,asc',
+      page: 0,
+    }),
+    () => this.canReadUsers() && !!this.role.data(),
+  );
 
   protected readonly editing = signal(false);
   protected readonly editable = computed(

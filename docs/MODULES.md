@@ -231,6 +231,8 @@ Endpoints (in the owner modules): `/vehicles/{id}/photos`, `/me/avatar`, `/organ
 
 Facade: `FileFacade` (upload, list files of an owner, delete one or all, signed URLs of several owners' first file).
 
+Photo order: `FileFacade.reorderOwnerFiles` puts an owner's files of one purpose in a given order (every id exactly once, `FILE_ORDER_INVALID` otherwise). Organizations use it through `PUT /organizations/{id}/photos/order` (`organization:update`) and `PUT /admin/organizations/{id}/photos/order` (`organization:approve`) with `{ fileIds }`: the first photo is the cover in search and on the public profile.
+
 ---
 
 ## 6. Module `vehicle`
@@ -278,6 +280,8 @@ Location: an organization may place itself on the map (`latitude`/`longitude`, b
 Endpoints: `GET/POST/PUT/DELETE /organizations/{organizationId}/services` (workspace), `GET /providers?q&serviceId&governorate&atHome&lat&lng&radiusKm&page&size`, `GET /providers/{organizationId}` and `GET /providers/governorates` (centres, public). Backoffice: `GET /admin/organizations/{organizationId}/services` (`organization:approve`) and `GET /admin/catalog/services/provider-counts` (`service:read`, catalog service id to the number of organizations offering it; the count lives here because catalog cannot depend on provider).
 
 Facade: `ProviderFacade` (offered services of an organization, is a service offered at home).
+
+The search copy (`ProviderProfile`) is written from `OrganizationProfileChanged`, which carries `changedAt`. Creating then approving an organization sends two events handled at the same time: the row is created with `INSERT … ON CONFLICT DO NOTHING`, locked (`SELECT … FOR UPDATE`), and an event older than the one already applied (`source_changed_at`) is ignored, so a late "pending" event cannot hide an approved garage.
 
 ---
 

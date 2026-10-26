@@ -6,10 +6,12 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
@@ -82,6 +84,22 @@ class FileFacadeImpl implements FileFacade {
 				: fileRepository.findAllByOwnerTypeAndOwnerIdAndPurposeOrderByPositionAscIdAsc(ownerType, ownerId,
 						purpose);
 		return files.stream().map(this::toDto).toList();
+	}
+
+	@Override
+	@Transactional
+	public List<StoredFileDto> reorderOwnerFiles(FileOwnerType ownerType, Long ownerId, FilePurpose purpose,
+			List<Long> fileIds) {
+		List<StoredFile> files = fileRepository.findAllByOwnerTypeAndOwnerIdAndPurposeOrderByPositionAscIdAsc(ownerType,
+				ownerId, purpose);
+		Map<Long, StoredFile> byId = files.stream().collect(Collectors.toMap(StoredFile::getId, f -> f));
+		if (fileIds.size() != files.size() || !byId.keySet().equals(new HashSet<>(fileIds))) {
+			throw new AppException(ErrorCode.FILE_ORDER_INVALID, "Send every file once");
+		}
+		for (int i = 0; i < fileIds.size(); i++) {
+			byId.get(fileIds.get(i)).moveTo(i);
+		}
+		return fileIds.stream().map(byId::get).map(this::toDto).toList();
 	}
 
 	@Override

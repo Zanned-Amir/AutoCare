@@ -69,6 +69,7 @@ const messagesByCode: Record<string, string> = {
   FILE_TYPE_NOT_ALLOWED:
     'Ce type de fichier n’est pas accepté (JPEG, PNG, WebP ou PDF pour les documents).',
   FILE_TOO_LARGE: 'Fichier trop volumineux (5 Mo pour une image, 10 Mo pour un PDF).',
+  FILE_ORDER_INVALID: 'Envoyez chaque photo une seule fois.',
   FILE_LIMIT_REACHED: 'Nombre maximum de fichiers atteint.',
   DIAGNOSTIC_ANSWERS_INVALID: 'Répondez à toutes les questions.',
   DIAGNOSTIC_QUESTION_INVALID: 'Une question à choix demande au moins deux choix différents.',

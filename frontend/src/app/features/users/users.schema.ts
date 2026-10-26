@@ -10,7 +10,8 @@ export const createUserSchema = z.object({
     .max(30)
     .refine((value) => value === '' || /^\+?[0-9 .-]{8,20}$/.test(value), 'Numéro invalide'),
   locale: z.enum(['fr', 'en']),
-  admin: z.boolean(),
+  /** Platform role names; USER is every customer. */
+  roles: z.array(z.string()).min(1, 'Choisissez au moins un rôle'),
 });
 
 export type CreateUserValue = z.infer<typeof createUserSchema>;

@@ -87,6 +87,13 @@ import { LocationStore } from '@store/location.store';
                   >+{{ provider.photoUrls.length - 5 }}</span
                 >
               }
+              @if (i === 0 && provider.photoUrls.length > 1) {
+                <!-- Phones only show the first photo: say how many there are. -->
+                <span
+                  class="absolute right-3 bottom-3 rounded-full bg-background-inverse/70 px-3 py-1 text-caption font-semibold text-white sm:hidden"
+                  >Voir les {{ provider.photoUrls.length }} photos</span
+                >
+              }
             </button>
           }
         </div>

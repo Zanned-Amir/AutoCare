@@ -248,6 +248,14 @@ export function injectOrganizationFileMutations(
       mutationFn: (fileId: number) => api.deletePhoto(organizationId(), fileId, admin()),
       onSuccess,
     })),
+    reorderPhotos: injectMutation(() => ({
+      mutationFn: (fileIds: number[]) => api.reorderPhotos(organizationId(), fileIds, admin()),
+      onSuccess: () => {
+        onSuccess();
+        // The cover shows on the public profile and search cards.
+        void queryClient.invalidateQueries({ queryKey: ['providers'] });
+      },
+    })),
     uploadDocument: injectMutation(() => ({
       mutationFn: (file: File) => api.uploadDocument(organizationId(), file, admin()),
       onSuccess,

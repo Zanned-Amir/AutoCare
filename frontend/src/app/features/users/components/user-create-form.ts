@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  output,
+  signal,
+} from '@angular/core';
 import {
   FormField as SignalFormField,
   form,
@@ -8,6 +15,9 @@ import {
 
 import { problemMessage } from '@core/api/api';
 import { Button, FormField, Select, SelectOption, inputClasses } from '@shared/ui';
+import { injectRolesQuery } from '@features/roles/roles.queries';
+import { RolePermissions } from '@features/roles/roles.permissions';
+import { AuthStore } from '@core/auth/auth.store';
 import { injectUserMutations } from '../users.queries';
 import { CreateUserValue, createUserSchema } from '../users.schema';
 import { AdminUser } from '../users.types';
@@ -17,7 +27,7 @@ const emptyValue: CreateUserValue = {
   fullName: '',
   phone: '',
   locale: 'fr',
-  admin: false,
+  roles: ['USER'],
 };
 
 /** Opens an account for someone (sign-up by phone, at the counter); they get a link to choose a password. */
@@ -67,10 +77,28 @@ const emptyValue: CreateUserValue = {
           <app-option value="en">English</app-option>
         </app-select>
       </app-form-field>
-      <label class="flex items-center gap-2 text-body-sm">
-        <input type="checkbox" class="size-4 accent-primary" [formField]="userForm.admin" />
-        Donner l’accès administrateur
-      </label>
+      @if (roles.data(); as list) {
+        <fieldset class="flex flex-col gap-2">
+          <legend class="mb-1.5 text-[13px] font-medium text-foreground-secondary">Rôles</legend>
+          @for (role of list; track role.id) {
+            <label class="flex cursor-pointer items-center gap-2 text-body-sm">
+              <input
+                type="checkbox"
+                class="size-4 accent-primary"
+                [checked]="model().roles.includes(role.name)"
+                (change)="toggleRole(role.name, $any($event.target).checked)"
+              />
+              <span class="text-foreground">{{ role.label }}</span>
+              @if (role.backoffice) {
+                <span class="text-caption text-foreground-muted">· backoffice</span>
+              }
+            </label>
+          }
+          @if (!model().roles.length) {
+            <p class="text-caption text-error">Choisissez au moins un rôle.</p>
+          }
+        </fieldset>
+      }
 
       @if (serverError(); as message) {
         <p class="rounded-control bg-error-subtle px-3 py-2 text-body-sm text-error">
@@ -104,6 +132,16 @@ export class UserCreateForm {
   );
   protected readonly serverError = signal<string | null>(null);
   private readonly mutations = injectUserMutations();
+  private readonly auth = inject(AuthStore);
+  /** Without role:read the account is a plain customer (USER). */
+  protected readonly roles = injectRolesQuery(() => this.auth.can(RolePermissions.ROLE_READ));
+
+  /** The role boxes are not form controls: they mark the form dirty themselves. */
+  protected toggleRole(name: string, checked: boolean): void {
+    const roles = this.model().roles.filter((role) => role !== name);
+    this.userForm.roles().value.set(checked ? [...roles, name] : roles);
+    this.userForm.roles().markAsDirty();
+  }
 
   protected readonly canSubmit = computed(
     () => this.userForm().dirty() && this.userForm().valid() && !this.mutations.create.isPending(),

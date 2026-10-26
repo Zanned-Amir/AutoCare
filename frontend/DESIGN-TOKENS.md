@@ -137,6 +137,8 @@ The service request workflow is the heart of the app; keep its colors consistent
 | Charts (`app-request-insights`) | Inline SVG, no chart library: `fill-primary` (received) and `fill-accent` (completed) bars with 3px radius, `stroke-border-subtle` grid, 11px `fill-foreground-muted` labels; KPI tiles on `bg-background-subtle`, money in `text-price text-primary`; horizontal bars `h-2 rounded-full` for rankings |
 | Reminders (`app-maintenance-reminders`) | Row with a 36px round clock chip (`bg-warning-subtle text-warning` when due), title + badge "Bientôt" (warning) or "En retard" (error), ghost "Fait" button and round icon buttons |
 | Opening hours (`app-booking-schedule-form`) | One row per day inside a `border-border-subtle` rounded-xl list: checkbox + day, 128px time fields, accent-text "+ Ajouter une plage" link, "Comme la veille" shortcut |
+| Lightbox (`app-lightbox`) | `bg-black/90` full screen, counter top left, round `bg-white/10` buttons (original, close, previous, next), photo `object-contain` with 12px radius, caption in `text-caption text-white/70` |
+| Organization photo grid | 4:3 tiles in a `rounded-2xl border-border-subtle` grid (2 then 3 columns), accent "Couverture" pill on the first, 32px round `bg-black/50` action buttons on a bottom gradient |
 | Export (`app-export-button`) | Secondary button with a download icon in the page header actions; "Export…" while busy |
 | Auth screens | Dark brand panel (overline, two-line heading, short text) + white 440px card with a signal-50 logo tile, centred `text-h3` title, full-width primary button, round provider buttons |
 
