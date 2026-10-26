@@ -18,9 +18,22 @@ import {
 import { QueryClient } from '@tanstack/angular-query-experimental';
 
 import { problemMessage } from '@core/api/api';
-import { Button, FileButton, FormField, Icon, inputClasses, Select, SelectOption } from '@shared/ui';
+import {
+  Button,
+  DropZone,
+  DropZoneItem,
+  FormField,
+  Icon,
+  inputClasses,
+  Select,
+  SelectOption,
+} from '@shared/ui';
 import { VehiclesApi } from '../vehicles.api';
-import { injectSaveVehicleMutation, injectVehicleCatalogQuery, vehicleKeys } from '../vehicles.queries';
+import {
+  injectSaveVehicleMutation,
+  injectVehicleMakesQuery,
+  vehicleKeys,
+} from '../vehicles.queries';
 import { VehicleFormValue, vehicleFormSchema } from '../vehicles.schema';
 import { FUEL_TYPES, Vehicle, fuelTypeLabels } from '../vehicles.types';
 import { VehiclePlateInput } from './vehicle-plate-input';
@@ -35,6 +48,7 @@ const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 /** A photo picked while creating a vehicle: uploaded once the vehicle has an id. */
 interface PendingPhoto {
+  id: string;
   file: File;
   url: string;
 }
@@ -67,7 +81,7 @@ const toFormValue = (vehicle: Vehicle): VehicleFormValue => ({
     Select,
     SelectOption,
     Button,
-    FileButton,
+    DropZone,
     FormField,
     Icon,
     SignalFormField,
@@ -224,45 +238,23 @@ const toFormValue = (vehicle: Vehicle): VehicleFormValue => ({
               <!-- Photos: only when creating (an existing vehicle has its own photos panel). -->
               @if (!vehicle()) {
                 <div class="sm:col-span-2">
-                  <div class="flex items-center justify-between gap-3">
-                    <span class="text-body-sm font-semibold text-primary">Photos</span>
-                    <app-file-button
-                      [disabled]="pendingPhotos().length >= maxPhotos"
-                      (picked)="addPhoto($event)"
-                      >Ajouter une photo</app-file-button
-                    >
-                  </div>
+                  <p class="mb-2 text-label text-foreground">Photos</p>
+                  <app-drop-zone
+                    [hint]="
+                      'JPG, PNG ou WebP, 5 Mo maximum · ' +
+                      pendingPhotos().length +
+                      ' / ' +
+                      maxPhotos +
+                      ' photos'
+                    "
+                    [items]="photoItems()"
+                    [disabled]="pendingPhotos().length >= maxPhotos"
+                    (files)="addPhotos($event)"
+                    (removed)="removePhoto($event.id)"
+                  />
                   @if (photoError(); as message) {
                     <p class="mt-2 text-body-sm text-error">{{ message }}</p>
                   }
-                  <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    @for (photo of pendingPhotos(); track photo.url) {
-                      <figure
-                        class="relative overflow-hidden rounded-control border border-border-subtle"
-                      >
-                        <img
-                          [src]="photo.url"
-                          [alt]="photo.file.name"
-                          class="aspect-[4/3] w-full object-cover"
-                        />
-                        <button
-                          appButton
-                          variant="danger"
-                          size="sm"
-                          type="button"
-                          class="absolute top-2 right-2 opacity-90"
-                          (click)="removePhoto(photo)"
-                          [attr.aria-label]="'Retirer ' + photo.file.name"
-                        >
-                          ✕
-                        </button>
-                      </figure>
-                    } @empty {
-                      <p class="col-span-full text-body-sm text-foreground-muted">
-                        Aucune photo. Ajoutez-en jusqu'à 8 (JPEG, PNG ou WebP, 5 Mo maximum).
-                      </p>
-                    }
-                  </div>
                 </div>
               }
             </div>
@@ -305,7 +297,7 @@ export class VehicleForm {
   );
   protected readonly serverError = signal<string | null>(null);
 
-  protected readonly catalog = injectVehicleCatalogQuery();
+  protected readonly catalog = injectVehicleMakesQuery();
   private readonly saveMutation = injectSaveVehicleMutation();
   private readonly api = inject(VehiclesApi);
   private readonly queryClient = inject(QueryClient);
@@ -355,8 +347,16 @@ export class VehicleForm {
     if (this.saveMutation.isPending() || this.uploadingPhotos()) return false;
     if (this.createdVehicle()) return this.pendingPhotos().length > 0;
     return this.vehicleForm().dirty() && this.vehicleForm().valid();
-    ;
   });
+
+  protected readonly photoItems = computed<DropZoneItem[]>(() =>
+    this.pendingPhotos().map((photo) => ({
+      id: photo.id,
+      name: photo.file.name,
+      url: photo.url,
+      image: true,
+    })),
+  );
 
   protected readonly submitLabel = computed(() => {
     if (this.uploadingPhotos()) return 'Envoi des photos…';
@@ -419,23 +419,31 @@ export class VehicleForm {
     this.vehicleForm.plate().markAsDirty();
   }
 
-  protected addPhoto(file: File): void {
+  protected addPhotos(files: File[]): void {
     this.photoError.set(null);
-    if (this.pendingPhotos().length >= MAX_PHOTOS) return;
-    if (!PHOTO_TYPES.includes(file.type)) {
-      this.photoError.set('Format non pris en charge (JPEG, PNG ou WebP).');
-      return;
+    const accepted: PendingPhoto[] = [];
+    for (const file of files) {
+      if (this.pendingPhotos().length + accepted.length >= MAX_PHOTOS) {
+        this.photoError.set(`${MAX_PHOTOS} photos maximum.`);
+        break;
+      }
+      if (!PHOTO_TYPES.includes(file.type)) {
+        this.photoError.set('Format non pris en charge (JPEG, PNG ou WebP).');
+        continue;
+      }
+      if (file.size > MAX_PHOTO_BYTES) {
+        this.photoError.set('Photo trop lourde (5 Mo maximum).');
+        continue;
+      }
+      accepted.push({ id: crypto.randomUUID(), file, url: URL.createObjectURL(file) });
     }
-    if (file.size > MAX_PHOTO_BYTES) {
-      this.photoError.set('Photo trop lourde (5 Mo maximum).');
-      return;
-    }
-    this.pendingPhotos.update((list) => [...list, { file, url: URL.createObjectURL(file) }]);
+    this.pendingPhotos.update((list) => [...list, ...accepted]);
   }
 
-  protected removePhoto(photo: PendingPhoto): void {
-    URL.revokeObjectURL(photo.url);
-    this.pendingPhotos.update((list) => list.filter((p) => p !== photo));
+  protected removePhoto(id: string | number): void {
+    const photo = this.pendingPhotos().find((p) => p.id === id);
+    if (photo) URL.revokeObjectURL(photo.url);
+    this.pendingPhotos.update((list) => list.filter((p) => p.id !== id));
   }
 
   protected close(): void {

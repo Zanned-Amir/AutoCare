@@ -5,13 +5,14 @@ import {
   effect,
   inject,
   input,
+  linkedSignal,
   output,
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { AuthStore } from '@core/auth/auth.store';
-import { Badge, Button, Card } from '@shared/ui';
+import { Badge, Button, Card, Icon } from '@shared/ui';
 import { formatNumber } from '@shared/utils/number';
 import { injectDeleteVehicleMutation, injectVehiclePhotosQuery } from '../vehicles.queries';
 import { VehiclePermissions } from '../vehicles.permissions';
@@ -19,7 +20,7 @@ import { Vehicle, fuelTypeLabels } from '../vehicles.types';
 
 @Component({
   selector: 'app-vehicle-card',
-  imports: [Badge, Button, Card, RouterLink],
+  imports: [Badge, Button, Card, Icon, RouterLink],
   template: `
     <app-card class="flex h-full flex-col gap-3">
       <div
@@ -31,20 +32,7 @@ import { Vehicle, fuelTypeLabels } from '../vehicles.types';
           <div class="h-full w-full animate-pulse bg-foreground/10"></div>
         } @else if (photos().length === 0) {
           <div class="flex h-full items-center justify-center text-foreground-muted">
-            <svg
-              class="size-12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              aria-hidden="true"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M3 13.5V17a1 1 0 0 0 1 1h1.5a2 2 0 0 0 4 0h5a2 2 0 0 0 4 0H20a1 1 0 0 0 1-1v-3.5a2 2 0 0 0-.4-1.2l-2.1-2.8A2 2 0 0 0 16.9 9H14V7.5A1.5 1.5 0 0 0 12.5 6h-3A1.5 1.5 0 0 0 8 7.5V9H6.1a2 2 0 0 0-1.6.8L3.4 12.3A2 2 0 0 0 3 13.5Z"
-              />
-            </svg>
+            <svg appIcon name="car" class="size-12"></svg>
           </div>
         } @else {
           @for (photo of photos(); track photo.id; let i = $index) {
@@ -176,15 +164,14 @@ export class VehicleCard {
 
   protected readonly photosQuery = injectVehiclePhotosQuery(() => this.vehicle().id);
   protected readonly photos = computed(() => this.photosQuery.data() ?? []);
-  protected readonly activeIndex = signal(0);
+  /** Back to the first photo whenever the card shows another vehicle. */
+  protected readonly activeIndex = linkedSignal({
+    source: () => this.vehicle().id,
+    computation: () => 0,
+  });
   protected readonly hoverPaused = signal(false);
 
   constructor() {
-    effect(() => {
-      this.vehicle().id;
-      this.activeIndex.set(0);
-    });
-
     effect((onCleanup) => {
       const count = this.photos().length;
       if (count < 2 || this.hoverPaused()) {

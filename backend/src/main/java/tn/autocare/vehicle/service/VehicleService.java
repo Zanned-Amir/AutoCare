@@ -42,9 +42,9 @@ public class VehicleService {
 
 	public List<VehicleDto> listMyVehicles(Long ownerId) {
 		return vehicleRepository.findAllByOwnerIdOrderByCreatedAtDesc(ownerId)
-				.stream()
-				.map(vehicleMapper::toDto)
-				.toList();
+			.stream()
+			.map(vehicleMapper::toDto)
+			.toList();
 	}
 
 	public VehicleDto getMyVehicle(Long ownerId, Long vehicleId) {
@@ -94,7 +94,7 @@ public class VehicleService {
 
 	private Vehicle findMyVehicleOrThrow(Long ownerId, Long vehicleId) {
 		return vehicleRepository.findByIdAndOwnerId(vehicleId, ownerId)
-				.orElseThrow(() -> AppException.notFound("Vehicle", vehicleId));
+			.orElseThrow(() -> AppException.notFound("Vehicle", vehicleId));
 	}
 
 	private static void checkYear(int year) {

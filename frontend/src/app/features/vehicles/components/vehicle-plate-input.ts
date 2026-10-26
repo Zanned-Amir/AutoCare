@@ -19,7 +19,7 @@ import {
   parsePlate,
   plateValue,
   validateSegments,
-} from './vehicle-plate';
+} from '../vehicles.plate';
 
 interface Slot {
   /** Segment index, or -1 for a literal such as "TUN". */
@@ -61,7 +61,9 @@ interface Slot {
             @if (slot.segment; as segment) {
               <input
                 [id]="'vehicle-plate-' + slot.index"
-                [class]="inputClasses + ' font-mono' + (hasError(slot.index) ? ' border-error' : '')"
+                [class]="
+                  inputClasses + ' font-mono' + (hasError(slot.index) ? ' border-error' : '')
+                "
                 [style.width]="width(segment)"
                 [value]="parts()[slot.index] ?? ''"
                 [attr.inputmode]="segment.digitsOnly ? 'numeric' : 'text'"

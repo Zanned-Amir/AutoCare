@@ -12,18 +12,19 @@ import tn.autocare.vehicle.service.VehicleCatalogService;
 
 import java.util.List;
 
+/** Makes and models offered by the vehicle form; free text stays allowed. */
 @Tag(name = "Vehicles")
 @RestController
 @RequestMapping("/vehicles/catalog")
 @RequiredArgsConstructor
 public class VehicleCatalogController {
 
-    private final VehicleCatalogService catalogService;
+	private final VehicleCatalogService catalogService;
 
-    @GetMapping
-    @PreAuthorize("@perm.has('" + VehiclePermissions.VEHICLE_READ + "')")
-    public List<VehicleMakeDto> getCatalog() {
-       return catalogService.makes();
-    }
+	@GetMapping
+	@PreAuthorize("@perm.has('" + VehiclePermissions.VEHICLE_READ + "')")
+	public List<VehicleMakeDto> listVehicleMakes() {
+		return catalogService.listVehicleMakes();
+	}
 
 }

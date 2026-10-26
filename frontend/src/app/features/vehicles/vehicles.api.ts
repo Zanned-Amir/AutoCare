@@ -56,7 +56,7 @@ export class VehiclesApi {
     return firstValueFrom(this.http.delete<void>(`${this.baseUrl}/${id}/photos/${fileId}`));
   }
 
-  getCatalog(): Promise<VehicleMake[]> {
-  return firstValueFrom(this.http.get<VehicleMake[]>(`${this.baseUrl}/catalog`));
-}
+  listVehicleMakes(): Promise<VehicleMake[]> {
+    return firstValueFrom(this.http.get<VehicleMake[]>(`${this.baseUrl}/catalog`));
+  }
 }

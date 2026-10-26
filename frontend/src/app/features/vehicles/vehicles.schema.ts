@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { PLATE_BACKEND_REGEX } from './components/vehicle-plate';
+import { PLATE_BACKEND_REGEX } from './vehicles.plate';
 import { FUEL_TYPES } from './vehicles.types';
 
 const maxYear = new Date().getFullYear() + 1;
@@ -26,10 +26,7 @@ export const vehicleFormSchema = z.object({
   plate: z
     .string()
     .trim()
-    .refine(
-      (value) => value === '' || PLATE_BACKEND_REGEX.test(value),
-      'Immatriculation invalide',
-    ),
+    .refine((value) => value === '' || PLATE_BACKEND_REGEX.test(value), 'Immatriculation invalide'),
   vin: z
     .string()
     .trim()

@@ -239,7 +239,9 @@ Facade: `FileFacade` (upload, list files of an owner, delete one or all, signed 
 |---|---|---|
 | `Vehicle` | A vehicle registered by a client | `id`, `ownerId`, `brand`, `model`, `year`, `fuelType` (`ESSENCE`, `DIESEL`, `HYBRID`, `ELECTRIC`, `LPG`), `engine`, `mileage`, `plate`, `vin`, `createdAt` |
 
-`plate` (Tunisian registration) and `vin` are optional and stored upper case.
+`plate` (Tunisian registration) and `vin` are optional and stored upper case. The web form builds the plate from its type (TUN, RS, FCR, Douane, État or free text) and still sends one string.
+
+Makes and models: `GET /vehicles/catalog` (`vehicle:read`) serves a short list read from `vehicle-catalog.json` at start-up. The form offers it with "Autre…" for free text; on save, a brand or model found in the list is written with its catalog spelling (case, accents and spaces ignored: "citroen " becomes "Citroën"), any other text is only trimmed.
 
 Rules: a client only sees and changes their own vehicles (another user's vehicle answers 404); mileage can only go up; year is between 1950 and next year. Photos come from the `file` module. `GET /admin/users/{userId}/vehicles` (`user:read`) lists one person's vehicles for the backoffice. Facade: `VehicleFacade` (get vehicle, check ownership, update mileage).
 
