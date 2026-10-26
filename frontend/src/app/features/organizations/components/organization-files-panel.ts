@@ -85,7 +85,7 @@ const MAX_PHOTOS = 8;
                 </button>
                 @if (i === 0) {
                   <span
-                    class="absolute top-2 left-2 rounded-full bg-accent px-2.5 py-0.5 text-caption font-semibold text-white shadow-card"
+                    class="absolute top-2 left-2 rounded-full bg-accent px-2.5 py-0.5 text-caption font-semibold text-accent-foreground shadow-card"
                     >Couverture</span
                   >
                 }

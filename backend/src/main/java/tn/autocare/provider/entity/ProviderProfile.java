@@ -2,6 +2,8 @@ package tn.autocare.provider.entity;
 
 import java.time.Instant;
 
+import org.jspecify.annotations.Nullable;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -70,7 +72,12 @@ public class ProviderProfile extends BaseEntity {
 	 * False for an event older than the one already applied (events may run
 	 * concurrently).
 	 */
-	public boolean acceptsChangeAt(Instant changedAt) {
+	public boolean acceptsChangeAt(@Nullable Instant changedAt) {
+		// Events stored before changedAt existed are replayed on restart: apply them as
+		// before.
+		if (changedAt == null) {
+			return true;
+		}
 		if (sourceChangedAt != null && changedAt.isBefore(sourceChangedAt)) {
 			return false;
 		}
