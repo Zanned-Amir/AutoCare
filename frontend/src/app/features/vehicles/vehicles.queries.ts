@@ -10,6 +10,8 @@ export const vehicleKeys = {
   detail: (id: number) => [...vehicleKeys.all, 'detail', id] as const,
   photos: (id: number) => [...vehicleKeys.all, 'photos', id] as const,
   ofUser: (userId: number) => [...vehicleKeys.all, 'user', userId] as const,
+  // Outside `all`: saving or deleting a vehicle must not refetch the catalog.
+  makes: () => ['vehicle-makes'] as const,
 };
 
 /** Backoffice user page. */
@@ -30,11 +32,12 @@ export function injectVehicleQuery(id: () => number) {
   }));
 }
 
-export function injectVehiclePhotosQuery(id: () => number) {
+export function injectVehiclePhotosQuery(vehicleId: () => number) {
   const api = inject(VehiclesApi);
   return injectQuery(() => ({
-    queryKey: vehicleKeys.photos(id()),
-    queryFn: () => api.listPhotos(id()),
+    queryKey: vehicleKeys.photos(vehicleId()),
+    queryFn: () => api.listPhotos(vehicleId()),
+    staleTime: 2 * 60 * 1000, // URLs signées (valides 15 min) : on garde une marge
   }));
 }
 
@@ -78,5 +81,14 @@ export function injectDeleteVehicleMutation() {
   return injectMutation(() => ({
     mutationFn: (id: number) => api.deleteVehicle(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: vehicleKeys.all }),
+  }));
+}
+
+export function injectVehicleMakesQuery() {
+  const api = inject(VehiclesApi);
+  return injectQuery(() => ({
+    queryKey: vehicleKeys.makes(),
+    queryFn: () => api.listVehicleMakes(),
+    staleTime: Infinity,
   }));
 }

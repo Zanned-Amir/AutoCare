@@ -24,3 +24,8 @@ export interface Vehicle {
   vin: string | null;
   createdAt: string;
 }
+
+export interface VehicleMake {
+  name: string;
+  models: string[];
+}

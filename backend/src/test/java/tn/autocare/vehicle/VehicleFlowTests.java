@@ -64,6 +64,29 @@ class VehicleFlowTests {
 	}
 
 	@Test
+	void catalogNamesAreNormalizedAndFreeTextIsKept() throws Exception {
+		String token = registerUser();
+		mvc.perform(get("/vehicles/catalog").header("Authorization", token))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$[?(@.name == 'Citroën')].models[0]").exists());
+
+		mvc.perform(post("/vehicles").header("Authorization", token)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(
+					"""
+							{"brand":" citroen ","model":"c3 aircross","year":2021,"fuelType":"ESSENCE","engine":"","mileage":30000}"""))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.brand").value("Citroën"))
+			.andExpect(jsonPath("$.model").value("C3 Aircross"));
+
+		mvc.perform(post("/vehicles").header("Authorization", token).contentType(MediaType.APPLICATION_JSON).content("""
+				{"brand":" Lada ","model":" Niva ","year":2010,"fuelType":"ESSENCE","engine":"","mileage":150000}"""))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.brand").value("Lada"))
+			.andExpect(jsonPath("$.model").value("Niva"));
+	}
+
+	@Test
 	void anotherUserCannotSeeOrChangeTheVehicle() throws Exception {
 		String owner = registerUser();
 		String stranger = registerUser();

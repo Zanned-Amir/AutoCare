@@ -38,6 +38,8 @@ public class VehicleService {
 
 	private final ApplicationEventPublisher events;
 
+	private final VehicleCatalogService catalogService;
+
 	public List<VehicleDto> listMyVehicles(Long ownerId) {
 		return vehicleRepository.findAllByOwnerIdOrderByCreatedAtDesc(ownerId)
 			.stream()
@@ -52,8 +54,9 @@ public class VehicleService {
 	@Transactional
 	public VehicleDto createVehicle(Long ownerId, CreateVehicleRequest request) {
 		checkYear(request.year());
-		Vehicle vehicle = Vehicle.register(ownerId, request.brand(), request.model(), request.year(),
-				request.fuelType(), request.engine(), request.mileage(), request.plate(), request.vin());
+		Vehicle vehicle = Vehicle.register(ownerId, catalogService.canonicalBrand(request.brand()),
+				catalogService.canonicalModel(request.brand(), request.model()), request.year(), request.fuelType(),
+				request.engine(), request.mileage(), request.plate(), request.vin());
 		return vehicleMapper.toDto(vehicleRepository.save(vehicle));
 	}
 
@@ -61,8 +64,9 @@ public class VehicleService {
 	public VehicleDto updateVehicle(Long ownerId, Long vehicleId, UpdateVehicleRequest request) {
 		checkYear(request.year());
 		Vehicle vehicle = findMyVehicleOrThrow(ownerId, vehicleId);
-		vehicle.updateDetails(request.brand(), request.model(), request.year(), request.fuelType(), request.engine(),
-				request.plate(), request.vin());
+		vehicle.updateDetails(catalogService.canonicalBrand(request.brand()),
+				catalogService.canonicalModel(request.brand(), request.model()), request.year(), request.fuelType(),
+				request.engine(), request.plate(), request.vin());
 		vehicle.updateMileage(request.mileage());
 		return vehicleMapper.toDto(vehicle);
 	}
