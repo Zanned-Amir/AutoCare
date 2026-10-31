@@ -16,7 +16,7 @@ import {
   answerTypeLabels,
   urgencyTones,
 } from '@features/diagnostic/diagnostic.types';
-import { Badge, Button, Card, Spinner } from '@shared/ui';
+import { Badge, Button, Card, ConfirmDialog, Spinner } from '@shared/ui';
 import { cn } from '@shared/utils/cn';
 import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
 
@@ -30,7 +30,17 @@ const operatorText: Record<RuleCondition['operator'], string> = {
 /** Symptoms on the left; questions and rules of the selected one on the right. */
 @Component({
   selector: 'app-admin-diagnostics-page',
-  imports: [AdminPageHeader, Badge, Button, Card, QuestionForm, RuleForm, Spinner, SymptomForm],
+  imports: [
+    AdminPageHeader,
+    Badge,
+    Button,
+    Card,
+    ConfirmDialog,
+    QuestionForm,
+    RuleForm,
+    Spinner,
+    SymptomForm,
+  ],
   template: `
     <app-admin-page-header
       title="Symptômes et règles"
@@ -129,7 +139,9 @@ const operatorText: Record<RuleCondition['operator'], string> = {
                         variant="ghost"
                         size="sm"
                         type="button"
-                        (click)="removeQuestion(question)"
+                        (click)="
+                          error.set(null); deleting.set({ kind: 'question', id: question.id })
+                        "
                       >
                         Supprimer
                       </button>
@@ -209,7 +221,7 @@ const operatorText: Record<RuleCondition['operator'], string> = {
                         variant="ghost"
                         size="sm"
                         type="button"
-                        (click)="mutations.deleteRule.mutate(rule.id)"
+                        (click)="error.set(null); deleting.set({ kind: 'rule', id: rule.id })"
                       >
                         Supprimer
                       </button>
@@ -235,6 +247,21 @@ const operatorText: Record<RuleCondition['operator'], string> = {
         </div>
       </div>
     </div>
+
+    <app-confirm-dialog
+      [open]="deleting() !== null"
+      tone="danger"
+      icon="info"
+      [title]="
+        deleting()?.kind === 'rule' ? 'Supprimer cette règle ?' : 'Supprimer cette question ?'
+      "
+      description="Les diagnostics déjà faits gardent leur résultat. Cette action est définitive."
+      confirmLabel="Supprimer"
+      [busy]="mutations.deleteQuestion.isPending() || mutations.deleteRule.isPending()"
+      [error]="error()"
+      (confirmed)="confirmDelete()"
+      (cancelled)="deleting.set(null)"
+    />
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -261,9 +288,16 @@ export class AdminDiagnosticsPage {
   protected readonly error = signal<string | null>(null);
   protected readonly hasSymptoms = computed(() => (this.symptoms.data()?.length ?? 0) > 0);
 
-  protected removeQuestion(question: Question): void {
+  protected readonly deleting = signal<{ kind: 'question' | 'rule'; id: number } | null>(null);
+
+  protected confirmDelete(): void {
+    const target = this.deleting();
+    if (!target) return;
     this.error.set(null);
-    this.mutations.deleteQuestion.mutate(question.id, {
+    const mutation =
+      target.kind === 'rule' ? this.mutations.deleteRule : this.mutations.deleteQuestion;
+    mutation.mutate(target.id, {
+      onSuccess: () => this.deleting.set(null),
       onError: (e) => this.error.set(problemMessage(e, 'Suppression impossible')),
     });
   }

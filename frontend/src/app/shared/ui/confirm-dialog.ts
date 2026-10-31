@@ -18,6 +18,8 @@ import { Modal } from './modal';
         <span [class]="chipClass()"><svg appIcon [name]="icon()" class="size-5"></svg></span>
         <h3 class="mt-4 text-h4 text-foreground">{{ title() }}</h3>
         <p class="mt-2 text-body-sm text-foreground-secondary">{{ description() }}</p>
+        <!-- Optional extra field, such as the reason of a revocation. -->
+        <ng-content />
         @if (error(); as message) {
           <p
             class="mt-4 rounded-2xl border border-error bg-error-subtle px-4 py-3 text-body-sm text-error"
@@ -39,7 +41,7 @@ import { Modal } from './modal';
             appButton
             [variant]="tone() === 'danger' ? 'danger' : 'primary'"
             type="button"
-            [disabled]="busy()"
+            [disabled]="busy() || confirmDisabled()"
             (click)="confirmed.emit()"
           >
             {{ busy() ? 'Patientez…' : confirmLabel() }}
@@ -59,6 +61,8 @@ export class ConfirmDialog {
   readonly tone = input<'warning' | 'danger'>('warning');
   readonly icon = input<IconName>('info');
   readonly busy = input(false);
+  /** Keeps the action off until the projected field is filled. */
+  readonly confirmDisabled = input(false);
   readonly error = input<string | null>(null);
   readonly confirmed = output<void>();
   readonly cancelled = output<void>();

@@ -9,7 +9,16 @@ import {
 
 import { problemMessage } from '@core/api/api';
 import { StoredFile } from '@shared/types/stored-file';
-import { Button, Card, DropZone, DropZoneItem, FileButton, Icon, Lightbox } from '@shared/ui';
+import {
+  Button,
+  Card,
+  ConfirmDialog,
+  DropZone,
+  DropZoneItem,
+  FileButton,
+  Icon,
+  Lightbox,
+} from '@shared/ui';
 import {
   injectOrganizationFileMutations,
   injectOrganizationFilesQueries,
@@ -23,7 +32,7 @@ const MAX_PHOTOS = 8;
  */
 @Component({
   selector: 'app-organization-files-panel',
-  imports: [Button, Card, DropZone, FileButton, Icon, Lightbox],
+  imports: [Button, Card, ConfirmDialog, DropZone, FileButton, Icon, Lightbox],
   template: `
     <div class="flex flex-col gap-6">
       <app-card class="flex flex-col gap-4">
@@ -50,7 +59,7 @@ const MAX_PHOTOS = 8;
           <div class="flex flex-wrap gap-2">
             <app-file-button
               [disabled]="busy()"
-              (picked)="run(mutations.uploadLogo.mutateAsync($event))"
+              (picked)="run(mutations.uploadLogo.mutateAsync($event), 'Envoi impossible')"
               >{{ files.logo.data() ? 'Changer le logo' : 'Ajouter un logo' }}</app-file-button
             >
             @if (files.logo.data()) {
@@ -59,7 +68,7 @@ const MAX_PHOTOS = 8;
                 variant="ghost"
                 size="sm"
                 type="button"
-                (click)="run(mutations.deleteLogo.mutateAsync())"
+                (click)="askRemove('logo', null, 'le logo')"
               >
                 Retirer
               </button>
@@ -130,7 +139,7 @@ const MAX_PHOTOS = 8;
                       [class]="photoAction + ' hover:!bg-error'"
                       [disabled]="busy()"
                       [attr.aria-label]="'Supprimer la photo ' + (i + 1)"
-                      (click)="run(mutations.deletePhoto.mutateAsync(photo.id))"
+                      (click)="askRemove('photo', photo.id, photo.originalName)"
                     >
                       <svg appIcon name="trash" class="size-4"></svg>
                     </button>
@@ -165,7 +174,7 @@ const MAX_PHOTOS = 8;
           [items]="documentItems()"
           [disabled]="busy()"
           (files)="uploadDocuments($event)"
-          (removed)="run(mutations.deleteDocument.mutateAsync(+$event.id))"
+          (removed)="askRemove('document', +$event.id, $event.name)"
         />
       </app-card>
 
@@ -177,6 +186,19 @@ const MAX_PHOTOS = 8;
         </p>
       }
     </div>
+
+    <app-confirm-dialog
+      [open]="removing() !== null"
+      tone="danger"
+      icon="trash"
+      title="Supprimer ce fichier ?"
+      [description]="'« ' + (removing()?.name ?? '') + ' » sera supprimé définitivement.'"
+      confirmLabel="Supprimer"
+      [busy]="removeBusy()"
+      [error]="removeError()"
+      (confirmed)="confirmRemove()"
+      (cancelled)="removing.set(null)"
+    />
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -234,9 +256,42 @@ export class OrganizationFilesPanel {
     this.uploadAll(files, (file) => this.mutations.uploadDocument.mutateAsync(file));
   }
 
-  protected run(action: Promise<unknown>): void {
+  protected run(action: Promise<unknown>, fallback = 'Action impossible'): void {
     this.error.set(null);
-    action.catch((e: unknown) => this.error.set(problemMessage(e, 'Envoi impossible')));
+    action.catch((e: unknown) => this.error.set(problemMessage(e, fallback)));
+  }
+
+  protected readonly removing = signal<{
+    kind: 'logo' | 'photo' | 'document';
+    id: number | null;
+    name: string;
+  } | null>(null);
+  protected readonly removeError = signal<string | null>(null);
+  protected readonly removeBusy = computed(
+    () =>
+      this.mutations.deleteLogo.isPending() ||
+      this.mutations.deletePhoto.isPending() ||
+      this.mutations.deleteDocument.isPending(),
+  );
+
+  protected askRemove(kind: 'logo' | 'photo' | 'document', id: number | null, name: string): void {
+    this.removeError.set(null);
+    this.removing.set({ kind, id, name });
+  }
+
+  protected confirmRemove(): void {
+    const target = this.removing();
+    if (!target) return;
+    const action =
+      target.kind === 'logo'
+        ? this.mutations.deleteLogo.mutateAsync()
+        : target.kind === 'photo'
+          ? this.mutations.deletePhoto.mutateAsync(target.id!)
+          : this.mutations.deleteDocument.mutateAsync(target.id!);
+    this.removeError.set(null);
+    action
+      .then(() => this.removing.set(null))
+      .catch((e: unknown) => this.removeError.set(problemMessage(e, 'Suppression impossible')));
   }
 
   /** One at a time, so the server's count limit is checked in order. */

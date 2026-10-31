@@ -23,12 +23,14 @@ import {
   IconName,
   Modal,
   Spinner,
+  EmptyState,
 } from '@shared/ui';
 import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
 
 @Component({
   selector: 'app-admin-catalog-page',
   imports: [
+    EmptyState,
     AdminPageHeader,
     AutoServiceForm,
     Badge,
@@ -44,10 +46,13 @@ import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
     <app-admin-page-header
       title="Services automobiles"
       subtitle="Les services que les garages peuvent proposer. Un service désactivé disparaît de la recherche et des nouvelles demandes."
-      ><button appButton actions type="button" (click)="editing.set('new')">
-        Nouveau service
-      </button></app-admin-page-header
     >
+      @if (canManage()) {
+        <button appButton actions type="button" (click)="editing.set('new')">
+          Nouveau service
+        </button>
+      }
+    </app-admin-page-header>
     <div class="px-4 py-5 md:px-8 md:py-8">
       <app-modal
         [title]="editing() === 'new' ? 'Nouveau service' : 'Modifier le service'"
@@ -106,16 +111,16 @@ import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
                   <app-badge [tone]="service.active ? 'success' : 'neutral'">
                     {{ service.active ? 'Actif' : 'Inactif' }}
                   </app-badge>
-                  <button
-                    appButton
-                    variant="secondary"
-                    size="sm"
-                    type="button"
-                    (click)="editing.set(service)"
-                  >
-                    Modifier
-                  </button>
                   @if (canManage()) {
+                    <button
+                      appButton
+                      variant="secondary"
+                      size="sm"
+                      type="button"
+                      (click)="editing.set(service)"
+                    >
+                      Modifier
+                    </button>
                     <button
                       appButton
                       variant="ghost"
@@ -130,7 +135,14 @@ import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
                 </div>
               </li>
             } @empty {
-              <li class="px-4 py-6 text-body-sm text-foreground-muted">Aucun service.</li>
+              <li>
+                <app-empty-state
+                  image="empty-search"
+                  size="sm"
+                  title="Aucun service"
+                  description="Aucun service ne correspond à cette recherche."
+                />
+              </li>
             }
           </ul>
         }

@@ -29,6 +29,7 @@ import {
   Button,
   Card,
   ConfirmDialog,
+  EmptyState,
   FilterGroup,
   FilterToolbar,
   FilterValues,
@@ -55,6 +56,7 @@ const FILTERS: { status: OrganizationStatus | null; label: string }[] = [
     Button,
     Card,
     ConfirmDialog,
+    EmptyState,
     FilterToolbar,
     Modal,
     OrganizationForm,
@@ -178,7 +180,12 @@ const FILTERS: { status: OrganizationStatus | null; label: string }[] = [
                     Documents
                   </button>
                   <app-organization-status-badge [status]="organization.status" />
-                  @if (organization.status !== 'APPROVED') {
+                  <!-- A first approval goes through the checklist of the detail page. -->
+                  @if (organization.status === 'PENDING') {
+                    <a appButton size="sm" [routerLink]="['/admin/organizations', organization.id]"
+                      >Examiner</a
+                    >
+                  } @else if (organization.status === 'SUSPENDED') {
                     <button
                       appButton
                       size="sm"
@@ -186,7 +193,7 @@ const FILTERS: { status: OrganizationStatus | null; label: string }[] = [
                       [disabled]="moderate.isPending()"
                       (click)="approve(organization)"
                     >
-                      Valider
+                      Réactiver
                     </button>
                   }
                   @if (organization.status !== 'SUSPENDED') {
@@ -218,7 +225,14 @@ const FILTERS: { status: OrganizationStatus | null; label: string }[] = [
                 }
               </li>
             } @empty {
-              <li class="px-4 py-6 text-body-sm text-foreground-muted">Aucune entreprise.</li>
+              <li>
+                <app-empty-state
+                  image="pro-garage"
+                  size="sm"
+                  title="Aucune entreprise"
+                  description="Aucune entreprise ne correspond à ce statut ou à ces filtres."
+                />
+              </li>
             }
           </ul>
           @if (page.page.totalPages > 1) {

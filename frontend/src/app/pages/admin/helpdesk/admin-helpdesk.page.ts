@@ -34,12 +34,14 @@ import {
   inputClasses,
   Select,
   SelectOption,
+  EmptyState,
 } from '@shared/ui';
 import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
 
 @Component({
   selector: 'app-admin-helpdesk-page',
   imports: [
+    EmptyState,
     Select,
     SelectOption,
     AdminPageHeader,
@@ -178,7 +180,14 @@ import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
                 </a>
               </li>
             } @empty {
-              <li class="px-4 py-6 text-body-sm text-foreground-muted">Aucune demande.</li>
+              <li>
+                <app-empty-state
+                  image="support"
+                  size="sm"
+                  title="Aucune demande de support"
+                  description="Aucun ticket ne correspond à ces filtres."
+                />
+              </li>
             }
           </ul>
         }
@@ -189,56 +198,58 @@ import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
         <p class="mb-3 text-body-sm text-foreground-secondary">
           Minutes avant la première réponse et la résolution, selon la priorité.
         </p>
-        <table class="w-full text-body-sm">
-          <thead>
-            <tr class="text-left text-foreground-muted">
-              <th class="py-1">Priorité</th>
-              <th>1re réponse</th>
-              <th>Résolution</th>
-              <th>Actif</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (p of sla.data() ?? []; track p.priority) {
-              <tr class="border-t border-border-subtle">
-                <td class="py-2">{{ priorityLabels[p.priority] }}</td>
-                <td>
-                  <input
-                    type="number"
-                    min="1"
-                    [class]="inputClasses + ' h-8 w-24'"
-                    [value]="p.firstResponseMinutes"
-                    [disabled]="!canConfigure()"
-                    (change)="edit(p, 'firstResponseMinutes', $any($event.target).value)"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    min="1"
-                    [class]="inputClasses + ' h-8 w-24'"
-                    [value]="p.resolutionMinutes"
-                    [disabled]="!canConfigure()"
-                    (change)="edit(p, 'resolutionMinutes', $any($event.target).value)"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="checkbox"
-                    class="size-4 accent-primary"
-                    [checked]="p.active"
-                    [disabled]="!canConfigure()"
-                    (change)="edit(p, 'active', $any($event.target).checked)"
-                  />
-                </td>
-                <td class="text-caption text-success">
-                  {{ savedPriority() === p.priority ? 'Enregistré' : '' }}
-                </td>
+        <div class="-mx-2 overflow-x-auto px-2">
+          <table class="w-full min-w-[480px] text-body-sm">
+            <thead>
+              <tr class="text-left text-foreground-muted">
+                <th class="py-1">Priorité</th>
+                <th>1re réponse</th>
+                <th>Résolution</th>
+                <th>Actif</th>
+                <th></th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (p of sla.data() ?? []; track p.priority) {
+                <tr class="border-t border-border-subtle">
+                  <td class="py-2">{{ priorityLabels[p.priority] }}</td>
+                  <td>
+                    <input
+                      type="number"
+                      min="1"
+                      [class]="inputClasses + ' h-8 w-24'"
+                      [value]="p.firstResponseMinutes"
+                      [disabled]="!canConfigure()"
+                      (change)="edit(p, 'firstResponseMinutes', $any($event.target).value)"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      min="1"
+                      [class]="inputClasses + ' h-8 w-24'"
+                      [value]="p.resolutionMinutes"
+                      [disabled]="!canConfigure()"
+                      (change)="edit(p, 'resolutionMinutes', $any($event.target).value)"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      class="size-4 accent-primary"
+                      [checked]="p.active"
+                      [disabled]="!canConfigure()"
+                      (change)="edit(p, 'active', $any($event.target).checked)"
+                    />
+                  </td>
+                  <td class="text-caption text-success">
+                    {{ savedPriority() === p.priority ? 'Enregistré' : '' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
         @if (slaError(); as message) {
           <p class="mt-2 text-body-sm text-error">{{ message }}</p>
         }
@@ -295,9 +306,13 @@ export class AdminHelpdeskPage {
   }
 
   protected edit(policy: SlaPolicy, field: keyof SlaPolicy, value: string | boolean): void {
+    if (typeof value !== 'boolean' && !(Number(value) >= 1)) {
+      this.slaError.set('Indiquez au moins 1 minute.');
+      return;
+    }
     const next = {
       ...policy,
-      [field]: typeof value === 'boolean' ? value : Number(value),
+      [field]: typeof value === 'boolean' ? value : Math.round(Number(value)),
     } as SlaPolicy;
     this.slaError.set(null);
     this.updateSla.mutate(next, {

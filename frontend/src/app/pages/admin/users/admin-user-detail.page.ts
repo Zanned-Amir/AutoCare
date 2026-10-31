@@ -4,7 +4,9 @@ import { RouterLink } from '@angular/router';
 import { problemMessage } from '@core/api/api';
 import { AuthStore } from '@core/auth/auth.store';
 import { AssignRolesDialog } from '@features/roles/components/assign-roles-dialog';
-import { RolePermissions } from '@features/roles/roles.types';
+import { RolePermissions } from '@features/roles/roles.permissions';
+import { injectRolesQuery } from '@features/roles/roles.queries';
+import { formatNumber } from '@shared/utils/number';
 import { AuditTrail } from '@features/audit/components/audit-trail';
 import { OrganizationStatusBadge } from '@features/organizations/components/organization-status-badge';
 import { injectUserMembershipsQuery } from '@features/organizations/organizations.queries';
@@ -154,7 +156,7 @@ const dateFormat = new Intl.DateTimeFormat('fr-TN', { dateStyle: 'medium' });
                   <dd class="flex flex-wrap gap-2">
                     @for (role of current.roles; track role) {
                       <app-badge [tone]="role === 'ADMIN' ? 'primary' : 'neutral'">{{
-                        role
+                        roleLabel(role)
                       }}</app-badge>
                     }
                   </dd>
@@ -221,7 +223,8 @@ const dateFormat = new Intl.DateTimeFormat('fr-TN', { dateStyle: 'medium' });
                         {{ vehicle.brand }} {{ vehicle.model }}
                       </p>
                       <p class="text-caption text-foreground-muted">
-                        {{ vehicle.year }} · {{ vehicle.mileage }} km
+                        {{ vehicle.year }} ·
+                        <span class="text-plate">{{ formatNumber(vehicle.mileage) }} km</span>
                         @if (vehicle.plate) {
                           · <span class="text-plate">{{ vehicle.plate }}</span>
                         }
@@ -332,6 +335,12 @@ export class AdminUserDetailPage {
   protected readonly assigning = signal(false);
   protected readonly rolesError = signal<string | null>(null);
   protected readonly isMe = computed(() => this.auth.user()?.id === this.id());
+  protected readonly formatNumber = formatNumber;
+  private readonly roles = injectRolesQuery(() => this.auth.can(RolePermissions.ROLE_READ));
+
+  protected roleLabel(name: string): string {
+    return this.roles.data()?.find((role) => role.name === name)?.label ?? name;
+  }
 
   protected toggleActive(): void {
     const current = this.user.data();
