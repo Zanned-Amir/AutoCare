@@ -25,6 +25,7 @@ import tn.autocare.file.api.FileFacade;
 import tn.autocare.file.api.FileOwnerType;
 import tn.autocare.file.api.FilePurpose;
 import tn.autocare.file.api.StoredFileDto;
+import tn.autocare.file.api.UploadFileCommand;
 import tn.autocare.organization.api.OrganizationPermissions;
 import tn.autocare.organization.dto.ReorderFilesRequest;
 import tn.autocare.shared.security.CurrentUser;
@@ -210,8 +211,8 @@ public class OrganizationFileController {
 	}
 
 	private StoredFileDto upload(Long organizationId, MultipartFile file, FilePurpose purpose) throws IOException {
-		return fileFacade
-			.uploadFile(Uploads.toCommand(file, FileOwnerType.ORGANIZATION, organizationId, purpose, CurrentUser.id()));
+		return fileFacade.uploadFile(
+				UploadFileCommand.of(file, FileOwnerType.ORGANIZATION, organizationId, purpose, CurrentUser.id()));
 	}
 
 }
