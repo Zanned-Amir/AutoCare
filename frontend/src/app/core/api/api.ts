@@ -106,6 +106,10 @@ const messagesByCode: Record<string, string> = {
   MEMBER_USER_NOT_FOUND: "Aucun compte n'utilise cet e-mail. Demandez-lui de créer un compte.",
   MEMBER_ROLE_TYPE_MISMATCH: "Ce rôle n'est pas disponible pour ce type d'entreprise.",
   LAST_MEMBER_MANAGER: "L'entreprise doit garder au moins un membre actif qui gère l'équipe.",
+  ORGANIZATION_INVITATION_INVALID:
+    "Cette invitation n'est plus valable. Demandez-en une nouvelle à l'entreprise.",
+  ORGANIZATION_INVITATION_EMAIL_MISMATCH:
+    "Cette invitation a été envoyée à une autre adresse. Connectez-vous avec l'adresse invitée.",
   ORGANIZATION_NOT_PROVIDER: 'Seuls les prestataires peuvent proposer des services.',
   PROVIDER_SERVICE_ALREADY_OFFERED: 'Vous proposez déjà ce service.',
   PROVIDER_SERVICE_UNAVAILABLE: "Ce service n'est plus disponible dans le catalogue.",
