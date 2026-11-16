@@ -83,6 +83,23 @@ import { RegisterValue, registerSchema } from '../auth.schema';
           />
         </app-password-toggle>
       </app-form-field>
+      <app-form-field
+  label="Confirmer le mot de passe"
+  controlId="register-confirm-password"
+  [field]="registerForm.confirmPassword"
+  [required]="true"
+>
+  <app-password-toggle>
+    <input
+      id="register-confirm-password"
+      type="password"
+      autocomplete="new-password"
+      placeholder="Confirmez votre mot de passe"
+      [class]="inputClasses"
+      [formField]="registerForm.confirmPassword"
+    />
+  </app-password-toggle>
+</app-form-field>
       <button appButton type="submit" class="w-full" [disabled]="!canSubmit()">
         {{ register.isPending() ? 'Création…' : 'Créer mon compte' }}
       </button>
@@ -99,7 +116,8 @@ export class RegisterForm {
     email: '',
     phone: '',
     password: '',
-  });
+    confirmPassword: '',
+});
   protected readonly registerForm = form(this.model, (path) =>
     validateStandardSchema(path, registerSchema),
   );
@@ -114,7 +132,8 @@ export class RegisterForm {
     void submit(this.registerForm, async () => {
       this.serverError.set(null);
       try {
-        await this.register.mutateAsync(registerSchema.parse(this.model()));
+        const { confirmPassword, ...registerData } = registerSchema.parse(this.model());
+        await this.register.mutateAsync(registerData);
         this.registered.emit();
       } catch (error) {
         this.serverError.set(problemMessage(error, 'Inscription impossible'));

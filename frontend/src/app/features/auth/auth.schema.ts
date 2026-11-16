@@ -6,12 +6,18 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Le mot de passe est obligatoire'),
 });
 
-export const registerSchema = z.object({
-  fullName: z.string().trim().min(1, 'Le nom est obligatoire').max(120, '120 caractères maximum'),
-  email: z.email('Adresse e-mail invalide').max(254),
-  phone: z.string().max(30, '30 caractères maximum'),
-  password: z.string().min(8, '8 caractères minimum').max(72, '72 caractères maximum'),
-});
+export const registerSchema = z
+  .object({
+    fullName: z.string().trim().min(1, 'Le nom est obligatoire').max(120, '120 caractères maximum'),
+    email: z.email('Adresse e-mail invalide').max(254),
+    phone: z.string().max(30, '30 caractères maximum'),
+    password: z.string().min(8, '8 caractères minimum').max(72, '72 caractères maximum'),
+    confirmPassword: z.string().min(1, 'Veuillez confirmer votre mot de passe'),
+  })
+  .refine((value) => value.password === value.confirmPassword, {
+    message: 'Les mots de passe ne correspondent pas',
+    path: ['confirmPassword'],
+  });
 
 export const forgotPasswordSchema = z.object({
   email: z.email('Adresse e-mail invalide'),
