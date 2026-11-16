@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{mail/layout :: layout(#{mail.organization-invitation.title(${organizationName})}, #{mail.organization-invitation.eyebrow}, '🤝', ~{::content}, false)}">
+<body>
+<th:block th:fragment="content">
+  <th:block th:replace="~{mail/fragments :: lead(#{mail.organization-invitation.greeting})}"></th:block>
+  <th:block th:replace="~{mail/fragments :: lead(#{mail.organization-invitation.message(${inviterName}, ${organizationName}, ${role})})}"></th:block>
+  <th:block th:replace="~{mail/fragments :: button(${link}, #{mail.organization-invitation.cta})}"></th:block>
+  <th:block th:replace="~{mail/fragments :: note(#{mail.organization-invitation.account})}"></th:block>
+  <th:block th:replace="~{mail/fragments :: fineprint(#{mail.common.validity(${validity})})}"></th:block>
+  <th:block th:replace="~{mail/fragments :: fineprint(#{mail.organization-invitation.unexpected})}"></th:block>
+</th:block>
+</body>
+</html>

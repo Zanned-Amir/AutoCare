@@ -137,7 +137,7 @@ public class MemberService {
 		}
 	}
 
-	private static void checkRoleFits(MemberRoleKey roleKey, Organization organization) {
+	static void checkRoleFits(MemberRoleKey roleKey, Organization organization) {
 		if (!roleKey.fits(organization.getType())) {
 			throw new AppException(ErrorCode.MEMBER_ROLE_TYPE_MISMATCH,
 					"Role " + roleKey + " cannot be used in a " + organization.getType() + " organization");

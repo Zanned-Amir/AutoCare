@@ -71,6 +71,19 @@ class MailTemplatesTests {
 	}
 
 	@Test
+	void rendersOrganizationInvitation() {
+		Map<String, Object> variables = Map.of("inviterName", "Sami", "organizationName", "Garage Ennour", "role",
+				"technicien", "link", "http://web/invitations?token=abc", "validity", "7 jours");
+		assertThat(render("organization-invitation", FR, variables))
+			.contains("Rejoignez Garage Ennour", "Sami vous invite", "en tant que technicien",
+					"http://web/invitations?token=abc", "Valable 7 jours");
+		Map<String, Object> english = Map.of("inviterName", "Sami", "organizationName", "Garage Ennour", "role",
+				"technician", "link", "http://web/invitations?token=abc", "validity", "7 days");
+		assertThat(render("organization-invitation", EN, english))
+			.contains("Join Garage Ennour", "as technician", "View the invitation");
+	}
+
+	@Test
 	void rendersHelpdeskEmails() {
 		assertThat(render("helpdesk-ticket-reply", FR,
 				Map.of("name", "Sami", "ticketId", "TK-7K3M9QX2", "subject", "Garage absent", "excerpt",
