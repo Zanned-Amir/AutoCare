@@ -25,6 +25,7 @@ import {
   requestStatusLabels,
 } from '@features/service-requests/service-requests.types';
 import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
+import { formatNumber } from '@shared/utils/number';
 import {
   ExportButton,
   Button,
@@ -116,6 +117,7 @@ const dateFormat = new Intl.DateTimeFormat('fr-TN', { dateStyle: 'medium' });
             type="date"
             [class]="inputClasses + ' w-44'"
             [value]="from() ?? ''"
+            [attr.max]="to()"
             (change)="setDate('from', $any($event.target).value)"
           />
         </label>
@@ -125,6 +127,7 @@ const dateFormat = new Intl.DateTimeFormat('fr-TN', { dateStyle: 'medium' });
             type="date"
             [class]="inputClasses + ' w-44'"
             [value]="to() ?? ''"
+            [attr.min]="from()"
             (change)="setDate('to', $any($event.target).value)"
           />
         </label>
@@ -265,7 +268,7 @@ const dateFormat = new Intl.DateTimeFormat('fr-TN', { dateStyle: 'medium' });
                   <dt class="text-caption text-foreground-muted">Véhicule</dt>
                   <dd>
                     {{ vehicle.brand }} {{ vehicle.model }} ({{ vehicle.year }}) ·
-                    {{ vehicle.mileage }} km
+                    <span class="text-plate">{{ formatNumber(vehicle.mileage) }} km</span>
                     @if (vehicle.plate) {
                       · <span class="text-plate">{{ vehicle.plate }}</span>
                     }
@@ -342,6 +345,7 @@ export class AdminRequestsPage {
   protected readonly statusLabels = requestStatusLabels;
   protected readonly locationLabels = locationLabels;
   protected readonly inputClasses = inputClasses;
+  protected readonly formatNumber = formatNumber;
 
   protected readonly statusFilter = linkedSignal<RequestStatus | null>(() => {
     const value = this.status();
@@ -406,8 +410,12 @@ export class AdminRequestsPage {
     this.statusFilter.set(status);
   }
 
+  /** A typed date can still cross the other one: the range then shrinks to that day. */
   protected setDate(which: 'from' | 'to', value: string): void {
     (which === 'from' ? this.from : this.to).set(value || null);
+    const from = this.from();
+    const to = this.to();
+    if (from && to && from > to) (which === 'from' ? this.to : this.from).set(value);
   }
 
   protected clearDates(): void {

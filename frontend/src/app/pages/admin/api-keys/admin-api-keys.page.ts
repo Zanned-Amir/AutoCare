@@ -9,13 +9,33 @@ import {
 } from '@features/api-keys/api-keys.queries';
 import { ApiKey } from '@features/api-keys/api-keys.types';
 import { formatDateTime } from '@features/helpdesk/helpdesk.format';
-import { Badge, Button, Card, Spinner, inputClasses, Select, SelectOption } from '@shared/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  ConfirmDialog,
+  EmptyState,
+  Spinner,
+  inputClasses,
+  Select,
+  SelectOption,
+} from '@shared/ui';
 import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
 
 /** Partner API keys: the full key is shown once, at creation or rotation. */
 @Component({
   selector: 'app-admin-api-keys-page',
-  imports: [Select, SelectOption, AdminPageHeader, Badge, Button, Card, Spinner],
+  imports: [
+    Select,
+    SelectOption,
+    AdminPageHeader,
+    Badge,
+    Button,
+    Card,
+    ConfirmDialog,
+    EmptyState,
+    Spinner,
+  ],
   template: `
     <app-admin-page-header
       title="Clés API"
@@ -58,7 +78,7 @@ import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
             /></label>
             <label class="flex flex-col gap-1.5"
               ><span class="text-label">Environnement</span>
-              <app-select (valueChange)="environment.set($event)">
+              <app-select [value]="environment()" (valueChange)="environment.set($event)">
                 <app-option value="LIVE">Production</app-option>
                 <app-option value="TEST">Test</app-option>
               </app-select></label
@@ -109,6 +129,14 @@ import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
             </button>
           </div>
         </app-card>
+      }
+
+      @if (actionError(); as message) {
+        <p
+          class="mt-6 rounded-2xl border border-error bg-error-subtle px-4 py-3 text-body-sm text-error"
+        >
+          {{ message }}
+        </p>
       }
 
       <app-card class="mt-6 p-0">
@@ -191,12 +219,55 @@ import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
                 }
               </li>
             } @empty {
-              <li class="px-4 py-6 text-body-sm text-foreground-muted">Aucune clé.</li>
+              <li>
+                <app-empty-state
+                  image="empty-search"
+                  size="sm"
+                  title="Aucune clé API"
+                  description="Créez une clé pour donner accès à un partenaire."
+                />
+              </li>
             }
           </ul>
         }
       </app-card>
     </div>
+
+    <app-confirm-dialog
+      [open]="rotating() !== null"
+      icon="reset"
+      [title]="'Régénérer la clé de ' + (rotating()?.label ?? '') + ' ?'"
+      description="Une nouvelle clé est affichée une seule fois. L’ancienne reste valable 24 h."
+      confirmLabel="Régénérer"
+      [busy]="mutations.rotate.isPending()"
+      [error]="dialogError()"
+      (confirmed)="confirmRotate()"
+      (cancelled)="rotating.set(null)"
+    />
+
+    <app-confirm-dialog
+      [open]="revoking() !== null"
+      tone="danger"
+      icon="lock"
+      [title]="'Révoquer la clé de ' + (revoking()?.label ?? '') + ' ?'"
+      description="Le partenaire perd l’accès tout de suite. Une clé révoquée ne peut pas être réactivée."
+      confirmLabel="Révoquer"
+      [busy]="mutations.revoke.isPending()"
+      [confirmDisabled]="!revokeReason().trim()"
+      [error]="dialogError()"
+      (confirmed)="confirmRevoke()"
+      (cancelled)="revoking.set(null)"
+    >
+      <label class="mt-4 flex flex-col gap-1.5 text-left">
+        <span class="text-label text-foreground">Raison</span>
+        <input
+          [class]="inputClasses"
+          [value]="revokeReason()"
+          (input)="revokeReason.set($any($event.target).value)"
+          placeholder="Contrat terminé, clé exposée…"
+        />
+      </label>
+    </app-confirm-dialog>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -205,7 +276,7 @@ export class AdminApiKeysPage {
   protected readonly format = formatDateTime;
   protected readonly apiKeys = injectApiKeysQuery();
   protected readonly capabilities = injectApiCapabilitiesQuery();
-  private readonly mutations = injectApiKeyMutations();
+  protected readonly mutations = injectApiKeyMutations();
   protected readonly usageFor = signal<number | null>(null);
   protected readonly usage = injectApiKeyUsageQuery(() => this.usageFor());
 
@@ -218,6 +289,11 @@ export class AdminApiKeysPage {
   protected readonly secret = signal<string | null>(null);
   protected readonly copied = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly actionError = signal<string | null>(null);
+  protected readonly dialogError = signal<string | null>(null);
+  protected readonly rotating = signal<ApiKey | null>(null);
+  protected readonly revoking = signal<ApiKey | null>(null);
+  protected readonly revokeReason = signal('');
   protected readonly canCreate = computed(
     () =>
       this.label().trim().length > 0 &&
@@ -257,21 +333,46 @@ export class AdminApiKeysPage {
   }
 
   protected rotate(k: ApiKey): void {
-    if (!window.confirm(`Régénérer la clé de ${k.label} ? L'ancienne reste valable 24 h.`)) return;
-    this.mutations.rotate.mutate(k.id, { onSuccess: ({ key }) => this.showSecret(key) });
+    this.dialogError.set(null);
+    this.rotating.set(k);
+  }
+
+  protected confirmRotate(): void {
+    const k = this.rotating();
+    if (!k) return;
+    this.mutations.rotate.mutate(k.id, {
+      onSuccess: ({ key }) => {
+        this.rotating.set(null);
+        this.showSecret(key);
+      },
+      onError: (e) => this.dialogError.set(problemMessage(e, 'Régénération impossible')),
+    });
   }
 
   protected revoke(k: ApiKey): void {
-    const reason = window.prompt(`Révoquer la clé de ${k.label} ? Raison :`);
-    if (reason === null) return;
-    this.mutations.revoke.mutate({ id: k.id, reason });
+    this.dialogError.set(null);
+    this.revokeReason.set('');
+    this.revoking.set(k);
+  }
+
+  protected confirmRevoke(): void {
+    const k = this.revoking();
+    if (!k) return;
+    this.mutations.revoke.mutate(
+      { id: k.id, reason: this.revokeReason().trim() },
+      {
+        onSuccess: () => this.revoking.set(null),
+        onError: (e) => this.dialogError.set(problemMessage(e, 'Révocation impossible')),
+      },
+    );
   }
 
   protected toggleStatus(k: ApiKey): void {
-    this.mutations.setStatus.mutate({
-      id: k.id,
-      status: k.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE',
-    });
+    this.actionError.set(null);
+    this.mutations.setStatus.mutate(
+      { id: k.id, status: k.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE' },
+      { onError: (e) => this.actionError.set(problemMessage(e, 'Action impossible')) },
+    );
   }
 
   protected statusLabel(k: ApiKey): string {

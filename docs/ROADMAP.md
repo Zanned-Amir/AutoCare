@@ -37,7 +37,7 @@ Order matters only where "Needs" says so; tasks without a dependency can run in 
 
 - [x] **B-ORG-1 Organizations.** Create (creator becomes owner, status `PENDING`), my organizations, read/update with `@orgPerm`, governorate validated against the 24 governorates. Admin: list by status, approve (publishes `OrganizationApproved`), suspend.
 - [x] **B-ORG-2 Members and `@orgPerm`.** Members with `role_key` + JSON permissions copied from `MemberRoleKey`, add existing user by email, change role / permissions (`CUSTOM`) / status, remove. `@orgPerm` backed by a Redis cache evicted on every change. Last-manager and role/type rules enforced. Covered by `OrganizationFlowTests`.
-- [ ] **B-ORG-3 Invitations.** Email invitation with hashed token, accept (creates member, account may be created on the way), revoke, expire. Needs B-ORG-2, B-MAIL-1.
+- [x] **B-ORG-3 Invitations.** Email invitation with hashed token, accept (creates member, account may be created on the way), revoke, expire. Needs B-ORG-2, B-MAIL-1. Covered by `OrganizationInvitationFlowTests`.
 
 ### Core domain
 

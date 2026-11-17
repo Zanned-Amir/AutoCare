@@ -33,6 +33,7 @@ import {
   FilterToolbar,
   FilterValues,
   Spinner,
+  EmptyState,
 } from '@shared/ui';
 import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
 
@@ -65,6 +66,7 @@ const SORT_OPTIONS = [
 @Component({
   selector: 'app-admin-users-page',
   imports: [
+    EmptyState,
     AdminPageHeader,
     ExportButton,
     Badge,
@@ -195,7 +197,14 @@ const SORT_OPTIONS = [
                 </div>
               </li>
             } @empty {
-              <li class="px-4 py-6 text-body-sm text-foreground-muted">Aucun utilisateur.</li>
+              <li>
+                <app-empty-state
+                  image="empty-search"
+                  size="sm"
+                  title="Aucun utilisateur"
+                  description="Aucun compte ne correspond à ces filtres."
+                />
+              </li>
             }
           </ul>
           @if (page.page.totalPages > 1) {

@@ -7,6 +7,9 @@ import { StoredFile } from '@shared/types/stored-file';
 import { AddMemberValue, OrganizationFormValue } from './organizations.schema';
 import {
   BookingScheduleValue,
+  AcceptedInvitation,
+  Invitation,
+  InvitationPreview,
   Member,
   MemberRoleKey,
   MemberStatus,
@@ -159,6 +162,37 @@ export class OrganizationsApi {
 
   addMember(organizationId: number, value: AddMemberValue, admin = false): Promise<Member> {
     return firstValueFrom(this.http.post<Member>(this.membersUrl(organizationId, admin), value));
+  }
+
+  listInvitations(organizationId: number): Promise<Invitation[]> {
+    return firstValueFrom(
+      this.http.get<Invitation[]>(`${this.baseUrl}/${organizationId}/invitations`),
+    );
+  }
+
+  inviteMember(organizationId: number, value: AddMemberValue): Promise<Invitation> {
+    return firstValueFrom(
+      this.http.post<Invitation>(`${this.baseUrl}/${organizationId}/invitations`, value),
+    );
+  }
+
+  revokeInvitation(organizationId: number, invitationId: number): Promise<void> {
+    return firstValueFrom(
+      this.http.delete<void>(`${this.baseUrl}/${organizationId}/invitations/${invitationId}`),
+    );
+  }
+
+  /** The token goes in the body so it stays out of URLs and server logs. */
+  previewInvitation(token: string): Promise<InvitationPreview> {
+    return firstValueFrom(
+      this.http.post<InvitationPreview>(`${API_URL}/organization-invitations/preview`, { token }),
+    );
+  }
+
+  acceptInvitation(token: string): Promise<AcceptedInvitation> {
+    return firstValueFrom(
+      this.http.post<AcceptedInvitation>(`${API_URL}/organization-invitations/accept`, { token }),
+    );
   }
 
   changeMemberRole(

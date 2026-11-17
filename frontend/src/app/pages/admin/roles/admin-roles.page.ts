@@ -8,7 +8,7 @@ import { RoleCard } from '@features/roles/components/role-card';
 import { injectRoleMutations, injectRolesQuery } from '@features/roles/roles.queries';
 import { Role, RolePermissions } from '@features/roles/roles.types';
 import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
-import { Button, FilterGroup, FilterToolbar, FilterValues, Spinner } from '@shared/ui';
+import { Button, FilterGroup, FilterToolbar, FilterValues, Spinner, EmptyState } from '@shared/ui';
 
 const TYPE_GROUP: FilterGroup = {
   key: 'type',
@@ -24,6 +24,7 @@ const TYPE_GROUP: FilterGroup = {
 @Component({
   selector: 'app-admin-roles-page',
   imports: [
+    EmptyState,
     AdminPageHeader,
     Button,
     DeleteRoleDialog,
@@ -80,7 +81,12 @@ const TYPE_GROUP: FilterGroup = {
           }
         </div>
         @if (!visible().length && !canManage()) {
-          <p class="text-body-sm text-foreground-muted">Aucun rôle ne correspond.</p>
+          <app-empty-state
+            image="empty-search"
+            size="sm"
+            title="Aucun rôle"
+            description="Aucun rôle ne correspond à cette recherche."
+          />
         }
       }
     </div>

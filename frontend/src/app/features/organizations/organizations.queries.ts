@@ -25,6 +25,8 @@ export const organizationKeys = {
   governorates: () => [...organizationKeys.all, 'governorates'] as const,
   members: (organizationId: number) =>
     [...organizationKeys.all, organizationId, 'members'] as const,
+  invitations: (organizationId: number) =>
+    [...organizationKeys.all, organizationId, 'invitations'] as const,
   admin: (status: OrganizationStatus | null, page: number, filters?: OrganizationSearchFilters) =>
     [...organizationKeys.all, 'admin', status, page, filters ?? null] as const,
 };
@@ -119,6 +121,52 @@ export function injectMemberMutations(
       onSuccess,
     })),
   };
+}
+
+export function injectInvitationsQuery(organizationId: () => number, enabled: () => boolean) {
+  const api = inject(OrganizationsApi);
+  return injectQuery(() => ({
+    queryKey: organizationKeys.invitations(organizationId()),
+    queryFn: () => api.listInvitations(organizationId()),
+    enabled: enabled(),
+  }));
+}
+
+export function injectInvitationMutations(organizationId: () => number) {
+  const api = inject(OrganizationsApi);
+  const queryClient = inject(QueryClient);
+  const onSuccess = () =>
+    queryClient.invalidateQueries({ queryKey: organizationKeys.invitations(organizationId()) });
+  return {
+    invite: injectMutation(() => ({
+      mutationFn: (value: AddMemberValue) => api.inviteMember(organizationId(), value),
+      onSuccess,
+    })),
+    revoke: injectMutation(() => ({
+      mutationFn: (invitationId: number) => api.revokeInvitation(organizationId(), invitationId),
+      onSuccess,
+    })),
+  };
+}
+
+export function injectInvitationPreviewQuery(token: () => string | undefined) {
+  const api = inject(OrganizationsApi);
+  return injectQuery(() => ({
+    queryKey: ['organization-invitations', token()] as const,
+    queryFn: () => api.previewInvitation(token()!),
+    enabled: !!token(),
+    retry: false,
+  }));
+}
+
+/** Joining adds an organization to "my organizations". */
+export function injectAcceptInvitationMutation() {
+  const api = inject(OrganizationsApi);
+  const queryClient = inject(QueryClient);
+  return injectMutation(() => ({
+    mutationFn: (token: string) => api.acceptInvitation(token),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: organizationKeys.all }),
+  }));
 }
 
 const organizationColumns: CsvColumn<Organization>[] = [

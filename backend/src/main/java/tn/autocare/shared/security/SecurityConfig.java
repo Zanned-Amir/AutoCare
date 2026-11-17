@@ -51,6 +51,9 @@ public class SecurityConfig {
 				.permitAll()
 				.requestMatchers(HttpMethod.GET, "/catalog/**", "/providers/**")
 				.permitAll()
+				// The invitation page shows who invites before the person signs in.
+				.requestMatchers(HttpMethod.POST, "/organization-invitations/preview")
+				.permitAll()
 				// A customer session never reaches the backoffice, even for an admin
 				// account.
 				.requestMatchers("/admin/**")

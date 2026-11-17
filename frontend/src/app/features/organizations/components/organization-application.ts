@@ -51,7 +51,7 @@ interface StagedFile {
 
 let nextStagedId = 1;
 
-/** Fields checked before leaving each step (the map and services steps are optional). */
+/** Form fields checked before leaving each step; services and documents are checked apart. */
 const STEP_FIELDS: (keyof OrganizationFormValue)[][] = [
   ['type', 'name', 'description'],
   ['phone', 'governorate', 'city', 'address', 'serviceZone'],
@@ -59,6 +59,9 @@ const STEP_FIELDS: (keyof OrganizationFormValue)[][] = [
   [],
   [],
 ];
+
+const SERVICES_STEP = 3;
+const FILES_STEP = 4;
 
 /**
  * Organization application in steps (toutestcasa checkout): stepper on top, one step in the main
@@ -318,7 +321,8 @@ const STEP_FIELDS: (keyof OrganizationFormValue)[][] = [
                   <li
                     class="rounded-xl border border-dashed border-border px-4 py-6 text-center text-body-sm text-foreground-secondary"
                   >
-                    Aucun service choisi : vous pourrez les ajouter depuis votre espace pro.
+                    Choisissez au moins un service : sans service, votre fiche n’apparaît pas dans
+                    la recherche.
                   </li>
                 }
               </ul>
@@ -329,9 +333,9 @@ const STEP_FIELDS: (keyof OrganizationFormValue)[][] = [
               <div>
                 <h2 class="text-h4 text-foreground">Photos et documents</h2>
                 <p class="text-body-sm text-foreground-secondary">
-                  Une fiche avec logo et photos de l’atelier inspire confiance. Les documents ne
-                  sont vus que par notre équipe et accélèrent la validation. Tout est facultatif et
-                  peut être ajouté plus tard.
+                  Une fiche avec logo et photos de l’atelier inspire confiance (facultatif). Au
+                  moins un document est obligatoire : notre équipe en a besoin pour valider
+                  l’entreprise, et lui seul le voit.
                 </p>
               </div>
               <div class="flex items-center gap-4">
@@ -375,7 +379,9 @@ const STEP_FIELDS: (keyof OrganizationFormValue)[][] = [
                 />
               </div>
               <div>
-                <p class="mb-2 text-label text-foreground">Documents de validation</p>
+                <p class="mb-2 text-label text-foreground">
+                  Documents de validation <span class="text-error" aria-hidden="true">*</span>
+                </p>
                 <app-drop-zone
                   accept="application/pdf,image/jpeg,image/png,image/webp"
                   hint="Registre de commerce, patente… PDF ou image, 10 Mo maximum"
@@ -515,7 +521,7 @@ export class OrganizationApplication {
   protected readonly steps = STEPS;
   protected readonly nextSteps = [
     'Notre équipe vérifie votre demande (sous 48 h en général).',
-    'Envoyez vos documents (registre de commerce, patente) pour accélérer la validation.',
+    'Si un document manque ou est illisible, nous vous contactons par téléphone.',
     'Votre fiche apparaît dans la recherche et les demandes arrivent dans votre espace pro.',
   ];
   protected readonly inputClasses = inputClasses;
@@ -562,7 +568,7 @@ export class OrganizationApplication {
       this.photos().length ? `${this.photos().length} photo(s)` : null,
       this.documents().length ? `${this.documents().length} document(s)` : null,
     ].filter((part) => part !== null);
-    return parts.length ? parts.join(', ') : 'Rien pour l’instant (à ajouter plus tard)';
+    return parts.length ? parts.join(', ') : 'Aucun fichier';
   });
 
   constructor() {
@@ -585,6 +591,7 @@ export class OrganizationApplication {
   }
 
   protected addDocuments(files: File[]): void {
+    this.error.set(null);
     this.documents.update((list) => [...list, ...files.slice(0, 10 - list.length).map(stage)]);
   }
 
@@ -637,6 +644,7 @@ export class OrganizationApplication {
   }
 
   protected setServices(ids: number[]): void {
+    this.error.set(null);
     this.serviceIds.set(ids);
     this.atHome.update((list) => list.filter((id) => ids.includes(id)));
   }
@@ -656,11 +664,34 @@ export class OrganizationApplication {
   }
 
   protected next(): void {
-    const fields = STEP_FIELDS[this.step()] ?? [];
-    fields.forEach((field) => this.orgForm[field]().markAsTouched());
-    if (fields.some((field) => !this.orgForm[field]().valid())) return;
-    this.error.set(null);
-    this.step.update((value) => value + 1);
+    (STEP_FIELDS[this.step()] ?? []).forEach((field) => this.orgForm[field]().markAsTouched());
+    const problem = this.stepProblem(this.step());
+    this.error.set(problem);
+    if (!problem) this.step.update((value) => value + 1);
+  }
+
+  /**
+   * What still blocks a step, or null. Field errors are read from the schema itself, so a
+   * step can never be left with an invalid field.
+   */
+  private stepProblem(step: number): string | null {
+    const fields = STEP_FIELDS[step] ?? [];
+    if (fields.length) {
+      const result = organizationFormSchema.safeParse(this.model());
+      const issue = result.success
+        ? undefined
+        : result.error.issues.find((i) =>
+            fields.includes(i.path[0] as keyof OrganizationFormValue),
+          );
+      if (issue) return `Complétez cette étape : ${issue.message.toLowerCase()}.`;
+    }
+    if (step === SERVICES_STEP && !this.serviceIds().length) {
+      return 'Choisissez au moins un service.';
+    }
+    if (step === FILES_STEP && !this.documents().length) {
+      return 'Ajoutez au moins un document (registre de commerce, patente…).';
+    }
+    return null;
   }
 
   protected setLocation(point: MapPoint): void {
@@ -694,8 +725,10 @@ export class OrganizationApplication {
    * from the pro space), it is only counted for the success screen.
    */
   protected async send(): Promise<void> {
-    if (!this.orgForm().valid()) {
-      this.step.set(0);
+    const blocked = STEPS.findIndex((_, i) => this.stepProblem(i) !== null);
+    if (blocked !== -1) {
+      this.step.set(blocked);
+      this.error.set(this.stepProblem(blocked));
       return;
     }
     this.sending.set(true);

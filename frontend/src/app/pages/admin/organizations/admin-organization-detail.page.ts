@@ -341,11 +341,16 @@ export class AdminOrganizationDetailPage {
         done: !!this.files.documents.data()?.length,
         required: true,
       },
-      {
-        label: 'Au moins un service proposé',
-        done: !!this.services.data()?.length,
-        required: true,
-      },
+      // Sellers do not offer services (V2 marketplace).
+      ...(organization?.type === 'PROVIDER'
+        ? [
+            {
+              label: 'Au moins un service proposé',
+              done: !!this.services.data()?.length,
+              required: true,
+            },
+          ]
+        : []),
       { label: 'Logo', done: !!this.files.logo.data(), required: false },
       { label: 'Photos de l’atelier', done: !!this.files.photos.data()?.length, required: false },
       {

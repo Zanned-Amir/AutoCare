@@ -223,6 +223,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'invitations',
+        title: 'Invitation - AutoCare TN',
+        data: { brand: 'login' },
+        loadComponent: () =>
+          import('./pages/public/auth/invitation.page').then((m) => m.InvitationPage),
+      },
+      {
         path: 'oauth/callback',
         title: 'Connexion - AutoCare TN',
         data: { brand: 'login' },

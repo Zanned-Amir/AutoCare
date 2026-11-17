@@ -68,6 +68,33 @@ export interface Member {
   joinedAt: string;
 }
 
+export type InvitationStatus = 'PENDING' | 'ACCEPTED' | 'EXPIRED' | 'REVOKED';
+
+/** A pending e-mail invitation of the team (GET /organizations/{id}/invitations). */
+export interface Invitation {
+  id: number;
+  email: string;
+  roleKey: MemberRoleKey;
+  status: InvitationStatus;
+  expiresAt: string;
+  createdAt: string;
+}
+
+/** What the invitation page shows before the person accepts. */
+export interface InvitationPreview {
+  organizationName: string;
+  organizationType: OrganizationType;
+  email: string;
+  roleKey: MemberRoleKey;
+  status: InvitationStatus;
+  expiresAt: string;
+}
+
+export interface AcceptedInvitation {
+  organizationId: number;
+  organizationName: string;
+}
+
 /** One organization a user belongs to, whatever the member status (backoffice user page). */
 export interface UserMembership {
   memberId: number;

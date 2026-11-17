@@ -9,7 +9,6 @@ import {
   requestStatusLabels,
   requestStatusTones,
 } from '@features/service-requests/service-requests.types';
-import { injectModerateOrganizationMutation } from '@features/organizations/organizations.queries';
 import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
 import { Badge, Button, Card, Icon, IconName } from '@shared/ui';
 
@@ -91,15 +90,13 @@ interface Kpi {
                       {{ organization.city }}, {{ organization.governorate }}
                     </p>
                   </a>
-                  <button
+                  <a
                     appButton
                     size="sm"
-                    type="button"
-                    [disabled]="moderate.isPending()"
-                    (click)="moderate.mutate({ id: organization.id, action: 'approve' })"
+                    variant="secondary"
+                    [routerLink]="['/admin/organizations', organization.id]"
+                    >Examiner</a
                   >
-                    Valider
-                  </button>
                 </li>
               } @empty {
                 <li class="flex items-center gap-3 px-5 py-6 text-body-sm text-foreground-muted">
@@ -201,7 +198,6 @@ interface Kpi {
 export class AdminDashboardPage {
   private readonly auth = inject(AuthStore);
   protected readonly overview = injectAdminOverviewQueries();
-  protected readonly moderate = injectModerateOrganizationMutation();
   protected readonly priorityLabels = priorityLabels;
   protected readonly priorityTones = priorityTones;
   protected readonly requestStatuses = REQUEST_STATUSES;

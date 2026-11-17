@@ -17,7 +17,12 @@ import { OAuthButtons } from '@features/auth/components/oauth-buttons';
     <app-oauth-buttons class="mt-6" intent="login" [redirect]="safeRedirect()" />
     <p class="mt-6 text-center text-body-sm text-foreground-secondary">
       Pas de compte ?
-      <a routerLink="/register" class="font-semibold text-primary hover:underline">S'inscrire</a>
+      <a
+        routerLink="/register"
+        [queryParams]="{ redirect: redirect() }"
+        class="font-semibold text-primary hover:underline"
+        >S'inscrire</a
+      >
     </p>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

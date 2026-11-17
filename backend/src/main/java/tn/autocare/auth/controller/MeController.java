@@ -1,19 +1,24 @@
 package tn.autocare.auth.controller;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,6 +41,11 @@ import tn.autocare.auth.service.EmailVerificationService;
 import tn.autocare.auth.service.PhoneVerificationService;
 import tn.autocare.auth.service.SessionService;
 import tn.autocare.auth.service.UserService;
+import tn.autocare.file.api.FileFacade;
+import tn.autocare.file.api.FileOwnerType;
+import tn.autocare.file.api.FilePurpose;
+import tn.autocare.file.api.StoredFileDto;
+import tn.autocare.file.api.UploadFileCommand;
 import tn.autocare.shared.security.CurrentUser;
 
 /** The signed-in user's own account (access token required). */
@@ -58,6 +68,8 @@ public class MeController {
 	private final AuthService authService;
 
 	private final RefreshCookie refreshCookie;
+
+	private final FileFacade fileFacade;
 
 	@GetMapping
 	public MeResponse getMe() {
@@ -148,6 +160,31 @@ public class MeController {
 			.header(HttpHeaders.SET_COOKIE, refreshCookie.clear(SessionScope.CUSTOMER, http).toString())
 			.header(HttpHeaders.SET_COOKIE, refreshCookie.clear(SessionScope.BACKOFFICE, http).toString())
 			.build();
+	}
+
+	/** The profile picture; 204 when there is none. */
+	@GetMapping("/avatar")
+	public ResponseEntity<StoredFileDto> getMyAvatar() {
+		return fileFacade.listOwnerFiles(FileOwnerType.USER, CurrentUser.id(), FilePurpose.AVATAR)
+			.stream()
+			.findFirst()
+			.map(ResponseEntity::ok)
+			.orElseGet(() -> ResponseEntity.noContent().build());
+	}
+
+	@PutMapping(path = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public StoredFileDto uploadMyAvatar(@RequestParam MultipartFile file) throws IOException {
+		Long userId = CurrentUser.id();
+		return fileFacade
+			.uploadFile(UploadFileCommand.of(file, FileOwnerType.USER, userId, FilePurpose.AVATAR, userId));
+	}
+
+	@DeleteMapping("/avatar")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void deleteMyAvatar() {
+		Long userId = CurrentUser.id();
+		fileFacade.listOwnerFiles(FileOwnerType.USER, userId, FilePurpose.AVATAR)
+			.forEach(file -> fileFacade.deleteOwnerFile(FileOwnerType.USER, userId, file.id()));
 	}
 
 }

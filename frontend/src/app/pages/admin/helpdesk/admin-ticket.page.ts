@@ -21,12 +21,31 @@ import {
   statusLabels,
   statusTones,
 } from '@features/helpdesk/helpdesk.types';
-import { Badge, Button, Card, Spinner, inputClasses, Select, SelectOption } from '@shared/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  ConfirmDialog,
+  Spinner,
+  inputClasses,
+  Select,
+  SelectOption,
+} from '@shared/ui';
 import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
 
 @Component({
   selector: 'app-admin-ticket-page',
-  imports: [Select, SelectOption, AdminPageHeader, Badge, Button, Card, Spinner, TicketThread],
+  imports: [
+    Select,
+    SelectOption,
+    AdminPageHeader,
+    Badge,
+    Button,
+    Card,
+    ConfirmDialog,
+    Spinner,
+    TicketThread,
+  ],
   template: `
     <app-admin-page-header
       [title]="ticket.data()?.subject ?? 'Demande de support'"
@@ -153,7 +172,7 @@ import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
                   size="sm"
                   type="button"
                   [disabled]="t.status === 'CLOSED'"
-                  (click)="escalate()"
+                  (click)="error.set(null); escalateReason.set(''); escalating.set(true)"
                 >
                   Escalader
                 </button>
@@ -222,6 +241,29 @@ import { AdminPageHeader } from '@layouts/backoffice/admin-page-header';
         <app-card class="mt-6"><p class="text-body-sm">Demande introuvable.</p></app-card>
       }
     </div>
+
+    <app-confirm-dialog
+      [open]="escalating()"
+      icon="info"
+      title="Escalader cette demande ?"
+      description="La priorité monte d’un cran et les délais SLA sont recalculés."
+      confirmLabel="Escalader"
+      [busy]="actions.escalate.isPending()"
+      [confirmDisabled]="!escalateReason().trim()"
+      [error]="error()"
+      (confirmed)="escalate()"
+      (cancelled)="escalating.set(false)"
+    >
+      <label class="mt-4 flex flex-col gap-1.5 text-left">
+        <span class="text-label text-foreground">Raison</span>
+        <input
+          [class]="inputClasses"
+          [value]="escalateReason()"
+          (input)="escalateReason.set($any($event.target).value)"
+          placeholder="Client bloqué, garage injoignable…"
+        />
+      </label>
+    </app-confirm-dialog>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -261,9 +303,15 @@ export class AdminTicketPage {
     );
   }
 
+  protected readonly escalating = signal(false);
+  protected readonly escalateReason = signal('');
+
   protected escalate(): void {
-    const reason = window.prompt("Raison de l'escalade ?") ?? '';
-    this.run(this.actions.escalate.mutateAsync(reason));
+    this.run(
+      this.actions.escalate
+        .mutateAsync(this.escalateReason().trim())
+        .then(() => this.escalating.set(false)),
+    );
   }
 
   protected run(action: Promise<unknown>): void {
