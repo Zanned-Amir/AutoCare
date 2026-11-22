@@ -14,6 +14,7 @@ import tn.autocare.shared.exception.AppException;
 import tn.autocare.shared.exception.ErrorCode;
 import tn.autocare.vehicle.api.VehicleDeleted;
 import tn.autocare.vehicle.api.VehicleDto;
+import tn.autocare.vehicle.api.VehicleSaved;
 import tn.autocare.vehicle.dto.CreateVehicleRequest;
 import tn.autocare.vehicle.dto.UpdateVehicleMileageRequest;
 import tn.autocare.vehicle.dto.UpdateVehicleRequest;
@@ -57,7 +58,7 @@ public class VehicleService {
 		Vehicle vehicle = Vehicle.register(ownerId, catalogService.canonicalBrand(request.brand()),
 				catalogService.canonicalModel(request.brand(), request.model()), request.year(), request.fuelType(),
 				request.engine(), request.mileage(), request.plate(), request.vin());
-		return vehicleMapper.toDto(vehicleRepository.save(vehicle));
+		return publishVehicleSaved(vehicleMapper.toDto(vehicleRepository.save(vehicle)));
 	}
 
 	@Transactional
@@ -68,14 +69,14 @@ public class VehicleService {
 				catalogService.canonicalModel(request.brand(), request.model()), request.year(), request.fuelType(),
 				request.engine(), request.plate(), request.vin());
 		vehicle.updateMileage(request.mileage());
-		return vehicleMapper.toDto(vehicle);
+		return publishVehicleSaved(vehicleMapper.toDto(vehicle));
 	}
 
 	@Transactional
 	public VehicleDto updateVehicleMileage(Long ownerId, Long vehicleId, UpdateVehicleMileageRequest request) {
 		Vehicle vehicle = findMyVehicleOrThrow(ownerId, vehicleId);
 		vehicle.updateMileage(request.mileage());
-		return vehicleMapper.toDto(vehicle);
+		return publishVehicleSaved(vehicleMapper.toDto(vehicle));
 	}
 
 	@Transactional
@@ -90,6 +91,11 @@ public class VehicleService {
 		if (!vehicleRepository.existsByIdAndOwnerId(vehicleId, ownerId)) {
 			throw AppException.notFound("Vehicle", vehicleId);
 		}
+	}
+
+	private VehicleDto publishVehicleSaved(VehicleDto vehicle) {
+		events.publishEvent(VehicleSaved.of(vehicle));
+		return vehicle;
 	}
 
 	private Vehicle findMyVehicleOrThrow(Long ownerId, Long vehicleId) {

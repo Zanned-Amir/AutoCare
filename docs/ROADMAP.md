@@ -65,6 +65,7 @@ Order matters only where "Needs" says so; tasks without a dependency can run in 
 - [x] **B-API-1 Partner API keys.** `apiaccess` module, hashed keys with rotation, IP allowlist, rate limit, daily usage, `/external/v1` (status, catalog, providers). Covered by `ApiKeyFlowTests`.
 - [x] **B-NOTIF-1 In-app notifications.** Tables, `NotificationFacade`, listeners for `OrganizationApproved`, `ServiceRequestCreated` (members with `request:read`), `ServiceRequestStatusChanged`, `ServiceRequestCompleted`. List, unread count, mark read/dismiss. Needs B-ORG-2, B-REQ-2.
 - [x] **B-NOTIF-2 Live notifications.** SSE endpoint (`SseEmitter`) pushing new notifications; Redis pub/sub so it works with several API instances. Needs B-NOTIF-1.
+- [x] **B-AI-1 AI assistant.** `ai-service/` microservice (FastAPI, LLM behind an OpenAI-compatible API or a mock), `assistant` module: chat streamed over HTTP + SSE, `VehicleSaved` / `VehicleDeleted` / `ServiceRequestCompleted` to Kafka, maintenance suggestions back as notifications; Kafka and Kafka UI in `docker-compose.dev.yml`, client page `/assistant`. Covered by `AssistantFlowTests`, `ai-service/tests` and `assistant-chat.store.spec.ts`.
 - [ ] **B-OPS-1 Ops.** Structured JSON logs in prod, health indicators for MinIO and SMTP, `prod` profile hardening (no Swagger, secure cookies, strict CORS).
 - [x] **B-TEST-1 Test base.** Shared Testcontainers config (Postgres + Redis), `@ApplicationModuleTest` per module, a JWT helper for MockMvc tests.
 
@@ -110,7 +111,7 @@ Order matters only where "Needs" says so; tasks without a dependency can run in 
 
 ## Microservices (next semester)
 
-1. Externalize events (Spring Modulith event externalization to RabbitMQ or Kafka).
+1. Externalize events (Spring Modulith event externalization to Kafka; the broker already runs for `ai-service`).
 2. Switch JWT to RS256 with a JWKS endpoint in `auth`.
 3. Extract one module at a time (start with `notification` or `catalog`): move its package to a new Spring Boot app, give it its own database from its schema, and replace its `FacadeImpl` in the monolith with an HTTP client (Spring `@HttpExchange`) implementing the same facade interface.
 4. Add an API gateway (Spring Cloud Gateway) in front once there are two services.

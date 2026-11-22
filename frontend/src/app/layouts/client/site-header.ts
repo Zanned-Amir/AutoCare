@@ -10,6 +10,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/ro
 import { filter } from 'rxjs';
 
 import { AuthStore } from '@core/auth/auth.store';
+import { AssistantPermissions } from '@features/assistant/assistant.permissions';
 import { injectLogoutMutation } from '@features/auth/auth.queries';
 import { NotificationBell } from '@features/notifications/components/notification-bell';
 import { Button, Icon, IconName, Logo } from '@shared/ui';
@@ -192,6 +193,9 @@ export class SiteHeader {
       { label: 'Trouver un pro', path: '/providers', icon: 'map' },
       { label: 'Diagnostic', path: '/diagnostic', icon: 'diagnostic' },
     ];
+    if (this.auth.can(AssistantPermissions.ASSISTANT_USE)) {
+      links.push({ label: 'Assistant IA', path: '/assistant', icon: 'sparkles' });
+    }
     if (this.auth.user()) {
       links.push(
         { label: 'Mes véhicules', path: '/vehicles', icon: 'car' },

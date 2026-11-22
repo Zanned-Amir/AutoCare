@@ -101,6 +101,8 @@ backend/src/main/java/tn/autocare/
     api/ controller/ dto/ entity/ repository/ service/ event/ config/
   audit/                        implemented: AuditLog written from other modules' events (event/AuditEventsListener), /admin/audit-logs
     api/ controller/ dto/ entity/ repository/ service/ event/
+  assistant/                    implemented: AI chat proxied to ai-service (HTTP + SSE), events to and from it over Kafka, no schema
+    api/ config/ controller/ dto/ event/ service/
   marketplace/ subscription/ billing/ review/                                                         V2, empty facade
 
 backend/src/main/resources/

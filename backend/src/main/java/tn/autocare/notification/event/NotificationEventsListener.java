@@ -10,6 +10,7 @@ import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
+import tn.autocare.assistant.api.AssistantMaintenanceSuggested;
 import tn.autocare.auth.api.AuthFacade;
 import tn.autocare.auth.api.UserSummary;
 import tn.autocare.catalog.api.AutoServiceDto;
@@ -125,6 +126,13 @@ class NotificationEventsListener {
 		notificationService.sendNotification(
 				NotificationDraft.translated("SERVICE_REQUEST_PROVIDER_MESSAGE", List.of(organization, event.preview()),
 						event.organizationId(), SERVICE_REQUEST, event.serviceRequestId(), Set.of(event.userId())));
+	}
+
+	@ApplicationModuleListener
+	void on(AssistantMaintenanceSuggested event) {
+		notificationService.sendNotification(NotificationDraft.translated("ASSISTANT_MAINTENANCE_SUGGESTED",
+				List.of(event.vehicleLabel(), String.valueOf(event.kmSinceLastService())), null, VEHICLE,
+				event.vehicleId(), Set.of(event.userId())));
 	}
 
 	@ApplicationModuleListener

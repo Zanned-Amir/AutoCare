@@ -54,6 +54,7 @@ frontend/src/
       audit/                    backoffice audit trail: audit-trail (who did what to a user, organization or service)
       maintenance/              vehicle history and planned maintenance: maintenance-timeline, maintenance-record-form, maintenance-reminders
       notifications/            bell, live unread count (notification-stream.ts reads the SSE stream with fetch)
+      assistant/                AI chat: assistant.api.ts streams the answer with fetch, assistant-chat.store.ts (conversation, provided by the page), assistant-chat
     layouts/                    route shells
       public-layout.ts          client area: client/site-header, site-footer, client-bottom-nav, account-menu
       client/account-layout.ts  "Mon compte" frame inside the client area: sidebar card (desktop) or pills (phone) around account, vehicles, requests, pro space, support
@@ -68,7 +69,7 @@ frontend/src/
       (client-layout.ts, provider-layout.ts when those areas start)
     pages/                      route entry components, thin: compose features
       public/                   home, provider search, provider profile, auth pages (+ onboarding, the welcome flow after sign-up)
-      client/                   my vehicles, diagnostic, my requests, history, my organizations + organizations/new (application)
+      client/                   my vehicles, diagnostic, assistant (AI chat), my requests, history, my organizations + organizations/new (application)
       provider/                 pro backoffice pages: pro-dashboard (activity charts), pro-requests, pro-calendar (agenda), pro-services, pro-history, pro-reviews, pro-profile (profile, hours and slots, files), pro-team
       client/support/           my support tickets
       admin/                    backoffice: login, dashboard, catalog, organizations (list, create, new for any staff with organization:create, detail), requests, users (list, create, detail), roles (grid, detail/edit/new), profile ("Mon profil" inside the backoffice session), helpdesk, API keys, diagnostic rules

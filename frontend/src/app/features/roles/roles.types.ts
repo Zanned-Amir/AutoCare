@@ -75,6 +75,7 @@ export const PERMISSION_CATALOG: CatalogGroup[] = [
     modules: [
       { key: 'service', label: 'Services', actions: [READ, MANAGE] },
       { key: 'diagnostic', label: 'Diagnostic guidé', actions: [a('use', 'Utiliser'), MANAGE] },
+      { key: 'assistant', label: 'Assistant IA', actions: [a('use', 'Utiliser')] },
     ],
   },
   {
