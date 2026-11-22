@@ -1,7 +1,7 @@
 # Local development stack.
 #
 #   docker compose -f docker-compose.dev.yml up -d              # infrastructure only, run the API from your IDE
-#   docker compose -f docker-compose.dev.yml --profile app up -d  # infrastructure + API container
+#   docker compose -f docker-compose.dev.yml --profile app up -d  # infrastructure + API and AI service containers
 #
 # Every value has a working default, so a fresh clone starts with no setup.
 # Override any of them in a root .env file (see .env.example).
@@ -73,6 +73,48 @@ services:
     volumes:
       - mailpit_data_autocare:/data
 
+  # Message broker between the API and the AI service (one node, KRaft, no ZooKeeper).
+  kafka:
+    image: apache/kafka:${KAFKA_VERSION:-4.0.0}
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      # INTERNAL for containers (kafka:9092), EXTERNAL for the API or ai-service run on the host (localhost:9094).
+      KAFKA_LISTENERS: INTERNAL://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:${KAFKA_PORT:-9094}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_HEAP_OPTS: "-Xmx512m -Xms256m"
+    ports:
+      - "${KAFKA_PORT:-9094}:9094"
+    volumes:
+      - kafka_data_autocare:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  # Topics and messages in the browser: http://localhost:8090
+  kafka-ui:
+    image: ghcr.io/kafbat/kafka-ui:${KAFKA_UI_VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      KAFKA_CLUSTERS_0_NAME: autocare
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "${KAFKA_UI_PORT:-8090}:8080"
+
   api:
     profiles: ["app"]
     build: ./backend
@@ -88,6 +130,8 @@ services:
       redis:
         condition: service_healthy
       minio:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     environment:
       POSTGRES_HOST: database
@@ -107,11 +151,37 @@ services:
       SMTP_PORT: 1025
       JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-dev-only-secret-change-me}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      ASSISTANT_ENABLED: "true"
+      ASSISTANT_URL: http://ai-service:8000
+      ASSISTANT_INTERNAL_TOKEN: ${ASSISTANT_INTERNAL_TOKEN:-dev-internal-token}
     ports:
       - "${SERVER_PORT:-8080}:8080"
+
+  # AI assistant microservice (FastAPI). Only the API calls it. Swagger: http://localhost:8000/docs
+  ai-service:
+    profiles: ["app"]
+    build: ./ai-service
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP: kafka:9092
+      INTERNAL_TOKEN: ${ASSISTANT_INTERNAL_TOKEN:-dev-internal-token}
+      # mock answers without a model; openai = any OpenAI-compatible API (OpenAI, Ollama /v1, Groq...)
+      LLM_PROVIDER: ${LLM_PROVIDER:-mock}
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://host.docker.internal:11434/v1}
+      LLM_API_KEY: ${LLM_API_KEY:-ollama}
+      LLM_MODEL: ${LLM_MODEL:-llama3.2}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${AI_SERVICE_PORT:-8000}:8000"
 
 volumes:
   db_data_autocare:
   redis_data_autocare:
   minio_data_autocare:
   mailpit_data_autocare:
+  kafka_data_autocare:

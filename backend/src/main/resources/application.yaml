@@ -59,6 +59,12 @@ spring:
       max-file-size: 10MB
       max-request-size: 12MB
 
+  # Broker shared with ai-service; only used when autocare.assistant.enabled is true.
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+    consumer:
+      auto-offset-reset: earliest
+
   modulith:
     events:
       jdbc:
@@ -145,4 +151,11 @@ autocare:
   web:
     # Frontend origin used in e-mail links (verify e-mail, reset password).
     base-url: ${WEB_BASE_URL:http://localhost:4200}
+  assistant:
+    # AI microservice (ai-service/). Off by default: the chat answers ASSISTANT_UNAVAILABLE and nothing goes to Kafka.
+    enabled: ${ASSISTANT_ENABLED:false}
+    url: ${ASSISTANT_URL:http://localhost:8000}
+    internal-token: ${ASSISTANT_INTERNAL_TOKEN:dev-internal-token}
+    events-topic: autocare.events
+    suggestions-topic: assistant.events
 

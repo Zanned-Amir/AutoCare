@@ -91,6 +91,8 @@ const messagesByCode: Record<string, string> = {
   QUOTE_NOT_ALLOWED: 'Un devis s’envoie seulement sur une demande en attente.',
   SERVICE_REQUEST_CHAT_CLOSED: 'Cette demande est close : la discussion n’est plus possible.',
   MAINTENANCE_REMINDER_DUE_REQUIRED: 'Indiquez une date ou un kilométrage d’échéance.',
+  ASSISTANT_UNAVAILABLE: 'L’assistant n’est pas disponible pour le moment.',
+  ASSISTANT_COOLDOWN: 'Patientez un instant avant d’envoyer un autre message.',
   QUOTE_NOT_PENDING: 'Aucun devis n’attend de réponse.',
   REVIEW_NOT_ALLOWED: 'Seule une demande terminée de votre compte peut être notée.',
   REVIEW_ALREADY_EXISTS: 'Vous avez déjà donné votre avis sur cette demande.',

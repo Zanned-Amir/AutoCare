@@ -9,6 +9,7 @@ import {
 } from '@core/auth/permission.guard';
 import { ApiKeyPermissions } from '@features/api-keys/api-keys.types';
 import { CatalogPermissions } from '@features/catalog/catalog.permissions';
+import { AssistantPermissions } from '@features/assistant/assistant.permissions';
 import { DiagnosticPermissions } from '@features/diagnostic/diagnostic.permissions';
 import { HelpdeskPermissions } from '@features/helpdesk/helpdesk.permissions';
 import { OrganizationPermissions } from '@features/organizations/organizations.permissions';
@@ -55,6 +56,13 @@ export const routes: Routes = [
         canActivate: [requirePermission(DiagnosticPermissions.DIAGNOSTIC_USE)],
         loadComponent: () =>
           import('./pages/client/diagnostic/diagnostic.page').then((m) => m.DiagnosticPage),
+      },
+      {
+        path: 'assistant',
+        title: 'Assistant IA - AutoCare TN',
+        canActivate: [requirePermission(AssistantPermissions.ASSISTANT_USE)],
+        loadComponent: () =>
+          import('./pages/client/assistant/assistant.page').then((m) => m.AssistantPage),
       },
       {
         path: 'organizations/new',

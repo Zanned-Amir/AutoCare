@@ -55,6 +55,8 @@ cd frontend && npm install && npm start
 | http://localhost:8080/api/docs | Swagger UI |
 | http://localhost:8025 | Mailpit (dev emails) |
 | http://localhost:9001 | MinIO console (`autocare` / `autocare2026`) |
+| http://localhost:8090 | Kafka UI (topics `autocare.events`, `assistant.events`) |
+| http://localhost:8000/docs | AI service Swagger (`--profile app`; see `ai-service/README.md`) |
 
 The `autocare` bucket is created automatically on API start.
 

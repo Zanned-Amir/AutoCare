@@ -46,6 +46,7 @@ Spring Boot 4.1 (Java 25), Spring Modulith 2.1, Spring Security with JWT, Spring
 | `billing` | Invoices and payments | V2 |
 | `review` | Ratings and comments on providers | V2 |
 | `audit` | Log of important actions (fed by events) | V1 |
+| `assistant` | AI chat answered by the `ai-service` microservice (FastAPI), linked by HTTP and Kafka | V1 |
 | `shared` | Common configuration, exceptions, storage client (not a business module) | V1 |
 | `admin` | Not a separate package: each module has its own `Admin<Module>Controller` under `/admin/...` | V1 |
 
@@ -63,7 +64,7 @@ Stored in the `Role` table and given to users through `UserRole`. They are loade
 
 | Role | Permissions | Phase |
 |---|---|---|
-| `USER` | `vehicle:*`, `diagnostic:use`, `request:create`, `request:read`, `request:cancel`, `review:create`, `subscription:manage`, `history:read`, `notification:read`, `organization:create`, `ticket:create`, `ticket:read` | V1 |
+| `USER` | `vehicle:*`, `diagnostic:use`, `assistant:use`, `request:create`, `request:read`, `request:cancel`, `review:create`, `subscription:manage`, `history:read`, `notification:read`, `organization:create`, `ticket:create`, `ticket:read` | V1 |
 | `ADMIN` | `*:*` (backoffice) | V1 |
 | `SUPPORT` | `ticket:*`, `user:read` (backoffice) | V1 |
 | `MODERATOR` | `listing:moderate`, `user:read` | V2 |
@@ -115,6 +116,7 @@ Each module declares its own resources as constants.
 | `service` | read, manage | `provider` and `catalog` |
 | `vehicle` | read, create, update, delete | `vehicle` |
 | `diagnostic` | use, manage | `diagnostic` |
+| `assistant` | use | `assistant` |
 | `request` | create, read, accept, reject, update_status, cancel | `servicerequest` |
 | `history` | read | `maintenance` |
 | `notification` | read | `notification` |
@@ -494,6 +496,21 @@ Records are never edited or deleted. They come from events, so no module depends
 
 ---
 
+## 17b. Module `assistant` and the `ai-service` microservice
+
+The first service outside the monolith: `ai-service/` (Python, FastAPI) answers the chat with an LLM (`LLM_PROVIDER=mock` answers without a model; `openai` works with any OpenAI-compatible API, Ollama included). The `assistant` module is its only caller; it stores nothing, so it has no schema.
+
+| Link | Style | What goes through |
+|---|---|---|
+| Browser → API | HTTP + SSE | `POST /assistant/messages` (`assistant:use`, 2 s cooldown per user): `message` and up to 20 earlier messages (`history`); the answer is streamed as `data: {"delta": "…"}` then `data: [DONE]` (`{"error": "ASSISTANT_UNAVAILABLE"}` if ai-service fails mid-answer). The conversation lives in the browser tab. |
+| API → ai-service | HTTP + SSE | `POST /chat` with the user id, header `X-Internal-Token` (shared secret). |
+| API → ai-service | Kafka `autocare.events` | `VehicleSaved`, `VehicleDeleted`, `ServiceRequestCompleted` in an envelope `{eventId, type, occurredAt, userId, payload}`, key = user id. Sent after commit by `AssistantEventsForwarder`, retried by the event registry. ai-service builds what it knows about each user's cars from them. |
+| ai-service → API | Kafka `assistant.events` | `MaintenanceReminderSuggested` once a car has run 10 000 km since its last completed request. `AssistantSuggestionsListener` checks the vehicle belongs to the user, then publishes `AssistantMaintenanceSuggested`. |
+
+`autocare.assistant.enabled` (`ASSISTANT_ENABLED`, `false` by default and in tests, `true` in the API container) turns the Kafka beans on; off, the chat answers `ASSISTANT_UNAVAILABLE` (503). Error codes: `ASSISTANT_UNAVAILABLE`, `ASSISTANT_COOLDOWN` (429). Kafka UI: http://localhost:8090.
+
+---
+
 ## 18. Events between modules
 
 | Event | Published by | Consumed by | Effect |
@@ -504,10 +521,12 @@ Records are never edited or deleted. They come from events, so no module depends
 | `UserInvited`, `UserSuspended`, `UserUnsuspended`, `UserRolesChanged` | `auth` | `audit` | Audit trail of the user |
 | `AutoServiceActivationChanged` | `catalog` | `audit` | Audit trail of the service |
 | `RoleChanged` | `auth` | `audit` | Audit trail of the role |
-| `VehicleDeleted` | `vehicle` | `maintenance` | Deletes the vehicle's history and reminders |
+| `VehicleDeleted` | `vehicle` | `maintenance`, `assistant` | Deletes the vehicle's history and reminders; forwarded to Kafka for ai-service |
+| `VehicleSaved` | `vehicle` | `assistant` | Forwarded to Kafka (`autocare.events`) so ai-service knows the user's cars |
+| `AssistantMaintenanceSuggested` | `assistant` | `notification` | Tells the owner a service is due (`ASSISTANT_MAINTENANCE_SUGGESTED`, from ai-service) |
 | `ServiceRequestCreated` | `servicerequest` | `notification` | Notifies members with `request:read` |
 | `ServiceRequestStatusChanged` | `servicerequest` | `notification` | Notifies the client |
-| `ServiceRequestCompleted` | `servicerequest` | `maintenance`, `review` (V2) | Creates the maintenance record with the work report, opens the review (the client's notification comes from `ServiceRequestStatusChanged`) |
+| `ServiceRequestCompleted` | `servicerequest` | `maintenance`, `review` (V2), `assistant` | Creates the maintenance record with the work report, opens the review (the client's notification comes from `ServiceRequestStatusChanged`); forwarded to Kafka for ai-service |
 | `ServiceRequestQuoted` | `servicerequest` | `notification` | Tells the client a quote is waiting |
 | `ServiceRequestMessagePosted` | `servicerequest` | `notification` | Tells the other side of the chat |
 | `MaintenanceReminderDue` | `maintenance` | `notification` | Tells the owner a planned maintenance is due |

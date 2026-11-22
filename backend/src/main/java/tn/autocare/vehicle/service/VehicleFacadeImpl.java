@@ -2,6 +2,7 @@ package tn.autocare.vehicle.service;
 
 import java.util.Optional;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import tn.autocare.shared.exception.AppException;
 import tn.autocare.vehicle.api.VehicleDto;
 import tn.autocare.vehicle.api.VehicleFacade;
+import tn.autocare.vehicle.api.VehicleSaved;
+import tn.autocare.vehicle.entity.Vehicle;
 import tn.autocare.vehicle.mapper.VehicleMapper;
 import tn.autocare.vehicle.repository.VehicleRepository;
 
@@ -20,6 +23,8 @@ class VehicleFacadeImpl implements VehicleFacade {
 	private final VehicleRepository vehicleRepository;
 
 	private final VehicleMapper vehicleMapper;
+
+	private final ApplicationEventPublisher events;
 
 	@Override
 	public Optional<VehicleDto> findVehicle(Long vehicleId) {
@@ -39,9 +44,10 @@ class VehicleFacadeImpl implements VehicleFacade {
 	@Override
 	@Transactional
 	public void updateVehicleMileage(Long vehicleId, int mileage) {
-		vehicleRepository.findById(vehicleId)
-			.orElseThrow(() -> AppException.notFound("Vehicle", vehicleId))
-			.updateMileage(mileage);
+		Vehicle vehicle = vehicleRepository.findById(vehicleId)
+			.orElseThrow(() -> AppException.notFound("Vehicle", vehicleId));
+		vehicle.updateMileage(mileage);
+		events.publishEvent(VehicleSaved.of(vehicleMapper.toDto(vehicle)));
 	}
 
 }

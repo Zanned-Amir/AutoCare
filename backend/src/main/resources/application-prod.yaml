@@ -28,6 +28,8 @@ autocare:
     provider: ${SMS_PROVIDER:twilio}
   telegram:
     mode: ${TELEGRAM_MODE:webhook}
+  assistant:
+    internal-token: ${ASSISTANT_INTERNAL_TOKEN}
 
 management:
   endpoint:

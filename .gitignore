@@ -2,3 +2,6 @@
 .dev/
 .idea/
 CLAUDE.md
+__pycache__/
+.venv/
+.pytest_cache/
